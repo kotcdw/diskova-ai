@@ -1,0 +1,31 @@
+name: Deploy to Railway
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_key:
+        description: 'OpenAI API Key'
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and Push Docker Image
+        run: |
+          echo "Building Docker image..."
+          docker build -t ghcr.io/${{ github.repository }}:latest .
+          docker push ghcr.io/${{ github.repository }}:latest
+      
+      - name: Deploy via Railway API
+        run: |
+          # Get Railway token from GitHub secrets
+          RAILWAY_TOKEN=${{ secrets.RAILWAY_TOKEN }}
+          
+          # Create deployment
+          curl -X POST https://railway.app/apiv2/projects \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json"

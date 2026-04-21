@@ -1,0 +1,58 @@
+# DISKOVA+ Core Dependencies
+# Python 3.11+ Required
+
+# Web Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# AI & LLM
+openai==1.10.0
+langchain==0.1.4
+langchain-community==0.0.17
+langchain-core==0.1.18
+anthropic==0.18.0
+
+# Local LLM (Optional - Ollama)
+# ollama==0.1.0
+
+# Database
+firebase-admin==6.4.0
+supabase==2.3.4
+pymongo==4.6.1
+
+# Vector Database
+chromadb==0.4.22
+
+# Cache
+redis==5.0.1
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Utilities
+python-dotenv==1.0.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+httpx==0.26.0
+aiofiles==23.2.1
+
+# Data Processing
+pandas==2.2.0
+numpy==1.26.3
+
+# Voice (Optional)
+speechrecognition==3.10.1
+pyttsx3==2.90
+pydub==0.25.1
+
+# Document Processing
+PyPDF2==3.0.1
+python-docx==1.1.0
+
+# HTTP Server for development
+python-dotenv==1.0.0
+
+# CORS
+starlette==0.35.1

@@ -1,0 +1,28 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Railway
+        run: npm install -g @railway/cli
+      
+      - name: Configure Railway
+        run: railway login --token ${{ secrets.RAILWAY_TOKEN }}
+        
+      - name: Link Project
+        run: railway link ${{ secrets.RAILWAY_PROJECT_ID }}
+        
+      - name: Set Environment Variables
+        run: |
+          railway variables set OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          railway variables set LLM_PROVIDER=openai
+          
+      - name: Deploy
+        run: railway up

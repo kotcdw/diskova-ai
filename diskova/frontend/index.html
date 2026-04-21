@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diskova+ - AI Assistant</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .app-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #667eea;
+            font-size: 18px;
+        }
+        
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .message.user {
+            align-items: flex-end;
+        }
+        
+        .message.ai {
+            align-items: flex-start;
+        }
+        
+        .message-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .message.user .message-bubble {
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message.ai .message-bubble {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .input-container {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-container input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #eee;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .input-container input:focus {
+            border-color: #667eea;
+        }
+        
+        .input-container button {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: none;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, background 0.2s;
+        }
+        
+        .input-container button:hover {
+            transform: scale(1.05);
+            background: #764ba2;
+        }
+        
+        .input-container button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .typing {
+            display: flex;
+            gap: 4px;
+            padding: 10px;
+        }
+        
+        .typing span {
+            width: 8px;
+            height: 8px;
+            background: #999;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing span:nth-child(2) { animation-delay: 0.2s; }
+        .typing span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 100% { opacity: 0.4; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(-4px); }
+        }
+        
+        .module-tag {
+            font-size: 10px;
+            padding: 2px 8px;
+            background: #eee;
+            border-radius: 10px;
+            color: #666;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <div class="logo">D+</div>
+            <div>
+                <h1>Diskova+</h1>
+                <p>Your AI Assistant</p>
+            </div>
+        </div>
+        
+        <div class="chat-container" id="chat">
+            <div class="message ai">
+                <div class="message-bubble">
+                    Hello! I'm Diskova+, your AI assistant. I can help you with:
+                    <br><br>
+                    • Tasks & Scheduling<br>
+                    • Budget & Finance<br>
+                    • Knowledge & Research<br>
+                    • Security & Alerts<br>
+                    • Automation workflows<br><br>
+                    What would you like help with?
+                </div>
+                <span class="module-tag">general</span>
+            </div>
+        </div>
+        
+        <div class="input-container">
+            <input type="text" id="messageInput" placeholder="Type your message..." autocomplete="off">
+            <button id="sendBtn" onclick="sendMessage()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000/api/chat/message';
+        let userId = 'user_' + Math.random().toString(36).substr(2, 9);
+        
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const btn = document.getElementById('sendBtn');
+            const message = input.value.trim();
+            
+            if (!message || btn.disabled) return;
+            
+            addMessage(message, 'user');
+            input.value = '';
+            btn.disabled = true;
+            
+            showTyping();
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        message: message,
+                        user_id: userId
+                    })
+                });
+                
+                const data = await response.json();
+                removeTyping();
+                addMessage(data.response, 'ai', data.module);
+            } catch (error) {
+                removeTyping();
+                addMessage('Sorry, I encountered an error. Make sure the backend is running on port 8000.', 'ai', 'error');
+            }
+            
+            btn.disabled = false;
+            input.focus();
+        }
+        
+        function addMessage(text, sender, module = 'general') {
+            const chat = document.getElementById('chat');
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
+            div.innerHTML = `
+                <div class="message-bubble">${text}</div>
+                ${sender === 'ai' ? `<span class="module-tag">${module}</span>` : ''}
+            `;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        }
+        
+        function showTyping() {
+            const chat = document.getElementById('chat');
+            const div = document.createElement('div');
+            div.className = 'message ai';
+            div.id = 'typing';
+            div.innerHTML = `
+                <div class="typing">
+                    <span></span><span></span><span></span>
+                </div>
+            `;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        }
+        
+        function removeTyping() {
+            const typing = document.getElementById('typing');
+            if (typing) typing.remove();
+        }
+        
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
