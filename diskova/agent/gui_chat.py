@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-Diskova AI - Chat Interface
-========================
-A clean Gradio chat interface.
+Diskova AI - Chat Interface with MCP Server
+=====================================
+A clean Gradio chat interface that also serves MCP tools.
 """
 
 import os
@@ -59,7 +59,7 @@ def get_config():
         },
         "gui": {
             "port": int(os.environ.get("GUI_PORT", "7860")),
-            "title": os.environ.get("GUI_TITLE", "Diskova AI")
+            "title": "Diskova AI"
         }
     }
     
@@ -67,7 +67,6 @@ def get_config():
         try:
             with open(config_path) as f:
                 user_config = json.load(f)
-                # Override with env vars
                 user_config["model"] = os.environ.get("OLLAMA_MODEL", user_config.get("model"))
                 user_config["ollama"]["base_url"] = os.environ.get("OLLAMA_URL", user_config["ollama"]["base_url"])
                 user_config["gui"]["port"] = int(os.environ.get("GUI_PORT", str(user_config["gui"]["port"])))
@@ -77,12 +76,38 @@ def get_config():
     return defaults
 
 
+# MCP Tools
+def search_knowledge(query: str, category: str = "all") -> str:
+    """Search your knowledge base."""
+    return f"Searched '{query}' in {category} - No results yet. Add knowledge to knowledge/ folder."
+
+
+def get_code_snippet(language: str, snippet_type: str = "hello") -> str:
+    """Get a code snippet."""
+    snippets = {
+        "python": {"hello": "print('Hello, World!')"},
+        "javascript": {"hello": "console.log('Hello, World!');"},
+        "go": {"hello": 'fmt.Println("Hello, World!")'},
+    }
+    return snippets.get(language, {}).get(snippet_type, "# Not found")
+
+
+def create_project(template: str, project_name: str) -> str:
+    """Create a new project from template."""
+    return f"Would create {template} project: {project_name}"
+
+
+def analyze_project(path: str = ".") -> str:
+    """Analyze project structure."""
+    return "Project analysis: No data yet"
+
+
+# Chat function
 def chat(message, history):
     if not message:
         return "", history
     
     history.append([message, None])
-    
     config = get_config()
     
     if config.get("provider") == "lmstudio":
@@ -92,18 +117,12 @@ def chat(message, history):
             import requests
             response = requests.post(
                 f"{url}/chat/completions",
-                json={
-                    "model": model,
-                    "messages": [{"role": "user", "content": message}]
-                },
+                json={"model": model, "messages": [{"role": "user", "content": message}]},
                 timeout=60
             )
-            if response.status_code == 200:
-                reply = response.json().get("choices", [{}])[0].get("message", {}).get("content", "No response")
-            else:
-                reply = f"LM Studio error: {response.status_code}"
+            reply = response.json().get("choices", [{}])[0].get("message", {}).get("content", "No response") if response.status_code == 200 else f"Error: {response.status_code}"
         except Exception as e:
-            reply = f"LM Studio not running: {str(e)[:80]}"
+            reply = f"LM Studio error: {str(e)[:80]}"
     else:
         url = config.get("ollama", {}).get("base_url", "http://localhost:11434")
         model = config.get("model", "qwen2.5-coder:1.5b")
@@ -111,22 +130,19 @@ def chat(message, history):
             import requests
             response = requests.post(
                 f"{url}/api/chat",
-                json={
-                    "model": model,
-                    "messages": [{"role": "user", "content": message}],
-                    "stream": False
-                },
+                json={"model": model, "messages": [{"role": "user", "content": message}], "stream": False},
                 timeout=60
             )
-            if response.status_code == 200:
-                reply = response.json().get("message", {}).get("content", "No response")
-            else:
-                reply = "Ollama not running. Start with: ollama serve"
+            reply = response.json().get("message", {}).get("content", "No response") if response.status_code == 200 else "Ollama not running"
         except Exception as e:
-            reply = f"Ollama not available: {str(e)[:80]}"
+            reply = f"Ollama error: {str(e)[:80]}"
     
     history[-1][1] = reply
     return "", history
+
+
+# Check if MCP server mode
+MCP_SERVER = os.environ.get("GRADIO_MCP_SERVER", "false").lower() == "true"
 
 
 def create_gui():
@@ -134,39 +150,37 @@ def create_gui():
     port = config.get("gui", {}).get("port", 7860)
     title = config.get("gui", {}).get("title", "Diskova AI")
     
-    # Check services
     ollama_url = config.get("ollama", {}).get("base_url", "http://localhost:11434")
     ollama_ok = check_service(f"{ollama_url}/api/tags")
     
-    with gr.Blocks(title=title) as app:
+    # Expose MCP tools if enabled
+    tools = []
+    if MCP_SERVER:
+        from gradio.tools import Tool
+        tools = [
+            Tool(name="search_knowledge", fn=search_knowledge, description="Search knowledge base"),
+            Tool(name="get_code_snippet", fn=get_code_snippet, description="Get code snippet"),
+            Tool(name="create_project", fn=create_project, description="Create project"),
+            Tool(name="analyze_project", fn=analyze_project, description="Analyze project"),
+        ]
+    
+    with gr.Blocks(title=title, tools=tools if tools else None) as app:
         gr.Markdown(f"# {title}")
-        gr.Markdown(f"### Status: {'Online' if ollama_ok else 'Offline'} | Model: {config.get('model')}")
+        gr.Markdown(f"### Status: {'Online' if ollama_ok else 'Offline'} | Model: {config.get('model')} | MCP: {MCP_SERVER}")
         
         with gr.Row():
             with gr.Column(scale=3):
                 chatbot = gr.Chatbot(height=500)
                 
                 with gr.Row():
-                    msg_input = gr.Textbox(
-                        show_label=False,
-                        placeholder="Ask me anything...",
-                        scale=4,
-                        container=True
-                    )
+                    msg_input = gr.Textbox(show_label=False, placeholder="Ask me anything...", scale=4, container=True)
                     submit_btn = gr.Button("Send", variant="primary", scale=1)
             
             with gr.Column(scale=1):
                 gr.Markdown("### Quick Actions")
-                gr.Button("Clear Chat", variant="secondary").click(
-                    lambda: (None, []),
-                    outputs=[msg_input, chatbot]
-                )
-                
+                gr.Button("Clear Chat", variant="secondary").click(lambda: (None, []), outputs=[msg_input, chatbot])
                 gr.Markdown("### Examples")
-                gr.Examples(
-                    examples=[["Hello"], ["Write hello in Python"]],
-                    inputs=msg_input,
-                )
+                gr.Examples(examples=[["Hello"], ["Write hello in Python"]]*3, inputs=msg_input)
         
         submit_btn.click(chat, [msg_input, chatbot], [msg_input, chatbot])
         msg_input.submit(chat, [msg_input, chatbot], [msg_input, chatbot])
@@ -178,18 +192,16 @@ def main():
     config = get_config()
     port = config.get("gui", {}).get("port", 7860)
     
-    # Check port
     if not check_port(port):
         print(f"Port {port} in use, trying {port + 1}...")
         port = port + 1
     
     app, _ = create_gui()
     print(f"Diskova AI - http://localhost:{port}")
-    app.launch(
-        server_port=port,
-        server_name="0.0.0.0",
-        show_error=True,
-    )
+    if MCP_SERVER:
+        print(f"MCP Server enabled - Use with Claude Desktop")
+    app.launch(server_port=port, server_name="0.0.0.0", show_error=True, mcp_server=MCP_SERVER)
+
 
 if __name__ == "__main__":
     main()
