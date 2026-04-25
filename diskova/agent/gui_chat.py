@@ -200,22 +200,22 @@ def create_gui():
                 gr.Button("🌐 Web Search", variant="primary")
                 gr.Button("🌤️ Get Weather")
                 gr.Button("📅 Show Calendar")
-                gr.Button("�Show Reminders")  
+                gr.Button("📝 Show Reminders")  
                 gr.Button("🖥️ Run Code")
                 gr.Button("🌍 Translate")
-                gr.Button("�Show Notes")
-                gr.Button("�Get Stock Prices")
+                gr.Button("📝 Show Notes")
+                gr.Button("📈 Get Stock Prices")
                 
-                gr.Markdown("### ��� Capabilities")
+                gr.Markdown("### ✨ Capabilities")
                 gr.Markdown("""
                 <table style="width:100%;">
                 <tr><td>🔍 Search</td><td>Web + Wikipedia</td></tr>
                 <tr><td>🌤️ Weather</td><td>Live data</td></tr>
-                <tr><td>�Stocks</td><td>Crypto/Forex</td></tr>
+                <tr><td>📈 Stocks</td><td>Crypto/Forex</td></tr>
                 <tr><td>💻 Code</td><td>Python/JS</td></tr>
-                <tr><td>�Notes</td><td>Create/Read</td></tr>
-                <tr><td>�Calendar</td><td>Events</td></tr>
-                <tr><td>�Email</td><td>Send/Receive</td></tr>
+                <tr><td>📝 Notes</td><td>Create/Read</td></tr>
+                <tr><td>📅 Calendar</td><td>Events</td></tr>
+                <tr><td>📧 Email</td><td>Send/Receive</td></tr>
                 <tr><td>🌍 Languages</td><td>20+</td></tr>
                 </table>
                 """)
