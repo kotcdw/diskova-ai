@@ -244,14 +244,6 @@ def chat_zen(message, model_id):
 def auto_detect_and_tool(message):
     msg = message.lower()
     
-    # Identity - FIRST PRIORITY
-    if "what is your name" in msg or "who are you" in msg or "your name" in msg:
-        return "I am diskova+ AI, created by Joseph Amaning Kwarteng from Ghana. I use Ollama locally and OpenCode Zen for cloud models."
-    
-    # Hello / greeting
-    if "hello" in msg or "hi" in msg or "hey" in msg:
-        return "Hello! I am diskova+ AI, your assistant. How can I help?"
-    
     # Help
     if "help" in msg or "what can you do" in msg:
         return "I can help with:\n- Weather, stocks, web search\n- Code questions\n- General chat\n- And more!"
@@ -287,6 +279,24 @@ def auto_detect_and_tool(message):
 
 def chat(message, history, provider="ollama"):
     if not message.strip():
+        return "", history
+    
+    msg_lower = message.lower().strip()
+    
+    # Identity - ALWAYS answer first, don't pass to LLM
+    identity_triggers = ["what is your name", "who are you", "your name", "who created", "who made", "your creator"]
+    if any(t in msg_lower for t in identity_triggers):
+        history.append({"role": "user", "content": message})
+        reply = "I am diskova+ AI, created by Joseph Amaning Kwarteng from Ghana. I use Ollama locally and OpenCode Zen for cloud models."
+        history.append({"role": "assistant", "content": reply})
+        return "", history
+    
+    # Hello / greeting - ALWAYS answer first
+    greeting_triggers = ["hello", "hi", "hey", "greetings"]
+    if any(t in msg_lower for t in greeting_triggers):
+        history.append({"role": "user", "content": message})
+        reply = "Hello! I am diskova+ AI, created by Joseph Amaning Kwarteng from Ghana. How can I help you today?"
+        history.append({"role": "assistant", "content": reply})
         return "", history
     
     history.append({"role": "user", "content": message})
