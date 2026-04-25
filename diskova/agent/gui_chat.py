@@ -251,7 +251,7 @@ def create_gui():
         gr.Markdown(f"""
         **Status:** {status_color} | **Model:** {config.get('model')}
         
-        **Architecture:**
+**Architecture:**
         - 🔤 Perception (Input) ✓
         - 🧠 Brain (NLP + Memory) ✓
         - 🔧 Action (Tools) ✓
@@ -263,60 +263,40 @@ def create_gui():
                 gr.Markdown("### 💬 Chat")
                 chatbot = gr.Chatbot(height=500)
                 
-                with gr.Row():
-                    msg_input = gr.Textbox(
-                        show_label=False, 
-                        placeholder="Type your message here... (Press Enter to send)",
-                        scale=4, 
-                        container=True
-                    )
-                    submit_btn = gr.Button("📤 Send", variant="primary", scale=1)
+                msg_input = gr.Textbox(
+                    show_label=False, 
+                    placeholder="Type your message here... (Press Enter)",
+                    container=True
+                )
+                submit_btn = gr.Button("📤 Send", variant="primary")
                 
                 with gr.Row():
                     voice_btn = gr.Button("🎤 Voice", variant="secondary")
-                    audio_input = gr.Audio(sources=["microphone"], type="filepath", visible=False)
-                    
                     clear_btn = gr.Button("🗑️ Clear", variant="stop")
             
             with gr.Column(scale=1):
                 gr.Markdown("### ⚡ Quick Actions")
-                gr.Button("🌐 Web Search", variant="primary").click(
-                    lambda: "Search for ", 
-                    outputs=msg_input
-                )
-                gr.Button("🌤️ Weather").click(
-                    lambda: "What's the weather in ", 
-                    outputs=msg_input
-                )
-                gr.Button("📅 Calendar").click(
-                    lambda: "Show my calendar", 
-                    outputs=msg_input
-                )
-                gr.Button("📝 Reminders").click(
-                    lambda: "Show my reminders", 
-                    outputs=msg_input
-                )
-                gr.Button("🖥️ Code").click(
-                    lambda: "Run code: ", 
-                    outputs=msg_input
-                )
-                gr.Button("🌍 Translate").click(
-                    lambda: "Translate hello to ", 
-                    outputs=msg_input
-                )
+                gr.Button("🌐 Web Search", variant="primary")
+                gr.Button("🌤️ Weather")
+                gr.Button("📅 Calendar")
+                gr.Button("📝 Reminders")
+                gr.Button("🖥️ Run Code")
+                gr.Button("🌍 Translate")
+                gr.Button("📝 Notes")
+                gr.Button("📈 Stocks")
                 
                 gr.Markdown("### ✨ Capabilities")
                 gr.Markdown(f"""
-                - **🔍 Search**: Web + Wikipedia
-                - **🌤️ Weather**: Live weather
-                - **📈 Stocks**: Crypto/Forex
-                - **💻 Code**: Run Python/JS
-                - **📝 Productivity**: Notes, Reminders
-                - **📅 Calendar**: Events + ICS
-                - **📧 Email**: Send/Receive
-                - **🌍 Languages**: 20+ Translation
-                - **💾 Memory**: Session + Knowledge
-                - **🎤 Voice**: Speech input
+- **🔍 Search**: Web + Wikipedia
+- **🌤️ Weather**: Live weather
+- **📈 Stocks**: Crypto/Forex
+- **💻 Code**: Run Python/JS
+- **📝 Productivity**: Notes, Reminders
+- **📅 Calendar**: Events + ICS
+- **📧 Email**: Send/Receive
+- **🌍 Languages**: 20+ Translation
+- **💾 Memory**: Session + Knowledge
+- **🎤 Voice**: Speech input
                 """)
                 
                 gr.Markdown("### 💡 Examples")
@@ -338,7 +318,6 @@ def create_gui():
         clear_btn.click(lambda: ("", []), outputs=[msg_input, chatbot])
         submit_btn.click(chat_with_layers, [msg_input, chatbot], [msg_input, chatbot])
         msg_input.submit(chat_with_layers, [msg_input, chatbot], [msg_input, chatbot])
-        voice_btn.click(lambda: None, outputs=audio_input)
         
         # Footer
         gr.Markdown("""
