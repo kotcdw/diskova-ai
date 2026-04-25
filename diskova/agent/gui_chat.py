@@ -1,5 +1,10 @@
 #!/usr/bin/env python
-"""Diskova AI - Voice GUI (STT + TTS)"""
+"""
+Diskova+ AI - Voice GUI (STT + TTS)
+=================================
+Created by: Joseph Amaning Kwarteng | Ghana
+Version: 1.0 | License: MIT
+"""
 
 import gradio as gr
 import requests
@@ -9,6 +14,10 @@ import asyncio
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5-coder:1.5b")
+
+CREATOR = "Joseph Amaning Kwarteng"
+CREATOR_LOCATION = "Ghana"
+APP_NAME = "Diskova+ AI"
 
 try:
     import speech_recognition as sr
@@ -147,8 +156,8 @@ status = "Online" if internet_ok else "Offline"
 voice_status = "Ready" if VOICE_AVAILABLE else "Not Installed"
 tts_status = "Ready" if TTS_AVAILABLE else "Not Installed"
 
-with gr.Blocks(title="Diskova AI - Voice") as app:
-    gr.Markdown(f"## Diskova AI\n**Status: {status} | Model: {OLLAMA_MODEL}\n\n- Microphone: {voice_status}\n- Speech: {tts_status}**")
+with gr.Blocks(title=f"{APP_NAME}") as app:
+    gr.Markdown(f"## {APP_NAME}\n**Creator: {CREATOR} | {CREATOR_LOCATION}**\n\n- Status: {status} | Model: {OLLAMA_MODEL}\n\n- Microphone: {voice_status}\n- Speech: {tts_status}**")
     
     with gr.Row():
         with gr.Column(scale=3):

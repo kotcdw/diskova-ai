@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 """
-Diskova AI - Full Desktop Assistant
-=============================
-All features:
+Diskova+ AI - Full Desktop Assistant
+=================================
+Created by: Joseph Amaning Kwarteng | Ghana
+Version: 1.0 | License: MIT
+
+Features:
 - System tray icon
 - Auto-start on boot
 - Background learning
@@ -67,6 +70,11 @@ WAKE_WORD = "hey diskova"
 VOICE_MODE = False
 LISTENING = False
 WIDGET_HWND = None
+
+# Creator Info
+CREATOR = "Joseph Amaning Kwarteng"
+CREATOR_LOCATION = "Ghana"
+APP_NAME = "Diskova+ AI"
 
 
 def check_port(port):
@@ -465,7 +473,8 @@ def run_gui():
 
 def main():
     print("=" * 50)
-    print("Diskova AI - Full Desktop Assistant")
+    print(f"{APP_NAME} - Desktop Assistant")
+    print(f"Created by: {CREATOR} | {CREATOR_LOCATION}")
     print("=" * 50)
     
     port = 7860

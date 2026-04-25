@@ -1,4 +1,4 @@
-# Diskova AI 🧠
+# Diskova+ AI 🧠
 
 **Created by Joseph Amaning Kwarteng** | Ghana, West Africa
 
@@ -6,7 +6,7 @@
 
 ## About
 
-Diskova AI is a lightweight desktop AI assistant built to help with everyday tasks through conversation and background learning. Runs entirely locally with Ollama - **$0 cost**.
+Diskova+ AI is a lightweight desktop AI assistant built to help with everyday tasks through conversation and background learning. Runs entirely locally with Ollama - **$0 cost**.
 
 ## Vision
 

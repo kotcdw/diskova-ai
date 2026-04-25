@@ -75,5 +75,19 @@
     "rating": 5,
     "type": "rating",
     "timestamp": "2026-04-25T10:48:21.405028"
+  },
+  {
+    "query": "hi",
+    "response": "Hi! How can I assist you today?",
+    "rating": 5,
+    "type": "rating",
+    "timestamp": "2026-04-25T11:23:13.122434"
+  },
+  {
+    "query": "hi",
+    "response": "Hello! How can I assist you today?",
+    "rating": 5,
+    "type": "rating",
+    "timestamp": "2026-04-25T11:38:07.605421"
   }
 ]

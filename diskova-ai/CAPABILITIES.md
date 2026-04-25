@@ -1,4 +1,4 @@
-# Diskova AI - Capabilities & Creator
+# Diskova+ AI - Capabilities & Creator
 
 ## Creator
 **Name:** Joseph Amaning Kwarteng  
