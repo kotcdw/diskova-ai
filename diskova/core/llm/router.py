@@ -116,31 +116,28 @@ class ModuleRouter:
         user_lower = user_input.lower()
         
         responses = {
-            "secretary": "I can help you with scheduling, task management, and reminders. Try saying 'remind me to call John tomorrow at 10am' or 'schedule a meeting with the team on Friday'.",
-            "finance": "I'm your finance assistant! I can track expenses, create budgets, and forecast cash flow. Try saying 'add expense of 500 for supplies' or 'show my budget this month'.",
-            "security": "Your security is my priority. I track logins, monitor for suspicious activity, and can set up 2FA. Try saying 'show my recent logins' or 'enable security alerts'.",
-            "knowledge": "I can search for information, track trends, and provide daily briefs. Try saying 'search for AI news' or 'what's trending in tech?'.",
-            "voice": "I understand voice commands and can convert speech to text. Try saying 'turn on voice mode' or 'transcribe my voice note'.",
-            "automation": "I can create workflows and automate repetitive tasks. Try saying 'create a daily reminder workflow' or 'set up auto email reply'.",
-            "communication": "I help manage emails, messages, and contacts. Try saying 'compose an email to John' or 'show my recent messages'.",
-            "documents": "I can summarize, organize, and analyze documents. Try saying 'summarize this PDF' or 'organize my files'.",
-            "auditor": "I help with compliance checks and audits. Try saying 'run a compliance check' or 'audit my expenses'.",
+            "secretary": "I can help you with scheduling, task management, and reminders. Say 'schedule meeting with team Friday 3pm' or 'remind me to call John tomorrow'.",
+            "finance": "I track expenses, budgets, and cash flow. Say 'add expense 500 for supplies' or 'show my budget this month'.",
+            "security": "I track logins and monitor for suspicious activity. Say 'show my recent logins' or 'enable security alerts'.",
+            "knowledge": "I search information and track trends. Say 'search for AI news' or 'what's trending in tech?'.",
+            "voice": "I understand voice commands. Say 'turn on voice mode' or 'transcribe my voice note'.",
+            "automation": "I create workflows and automate tasks. Say 'create daily reminder workflow' or 'set up auto email reply'.",
+            "communication": "I manage emails and contacts. Say 'compose an email to John' or 'show my recent messages'.",
+            "documents": "I summarize and organize documents. Say 'summarize this PDF' or 'organize my files'.",
+            "auditor": "I help with compliance checks. Say 'run compliance check' or 'audit my expenses'.",
         }
         
         for module, response in responses.items():
             if module in user_lower:
-                return ModuleResult(
-                    module=module,
-                    response=response,
-                    metadata={"mode": "demo"}
-                )
+                return ModuleResult(module=module, response=response, metadata={"mode": "demo"})
         
         return ModuleResult(
             module="general",
-            response=f"I understand you want help with: '{user_input}'. In demo mode, I'm showing module routing. With an OpenAI API key, I'd give you full AI-powered responses! Try one of these:\n\n• 'Help with scheduling'\n• 'Track my expenses'\n• 'Check my security'\n• 'Search for news'",
+            response=f"DEMO MODE: '{user_input}' - Module routing demo. Try: 'Help with scheduling', 'Track my expenses', 'Check my security', 'Search for news', 'Create a workflow'. Add OpenAI API key for full AI!",
             metadata={"mode": "demo"}
         )
 
+    def _build_messages(self, user_input: str, context: Dict, history: List[Dict]) -> List[Dict]:
         messages = self._build_messages(user_input, context, history)
         
         try:

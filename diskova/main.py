@@ -12,7 +12,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
 from diskova.api import router as chat_router
@@ -93,6 +94,17 @@ app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(modules.router, prefix="/api/modules", tags=["Modules"])
 app.include_router(voice_api.router, prefix="/api/voice", tags=["Voice"])
+
+frontend_path = Path(__file__).parent / "frontend"
+if frontend_path.exists():
+    app.mount("/app", StaticFiles(directory=str(frontend_path), html=True), name="frontend")
+
+@app.get("/app", include_in_schema=False)
+async def serve_frontend():
+    index_file = frontend_path / "index.html"
+    if index_file.exists():
+        return HTMLResponse(content=index_file.read_text())
+    return HTMLResponse(content="<h1>Frontend not found</h1>")
 
 
 if __name__ == "__main__":
