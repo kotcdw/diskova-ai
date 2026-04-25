@@ -160,7 +160,8 @@ class LongTermMemory:
                 query_texts=[query],
                 n_results=top_k
             )
-            return results.get("documents", [[""])[0]]
+            docs = results.get("documents", [[]])
+            return docs[0] if docs and len(docs) > 0 else []
         except:
             return []
 

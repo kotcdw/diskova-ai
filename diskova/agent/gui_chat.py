@@ -35,6 +35,11 @@ from brain import Brain, get_brain
 from action import ActionEngine, get_action_engine
 from response import OutputHandler, get_output_handler
 
+# Import additional features
+from profiles import UserProfile, get_profile
+from continuous_learning import LearningEngine, get_learning_engine
+from knowledge_base import KnowledgeBase, get_knowledge_base
+
 
 def check_port(port):
     """Check if port is available."""
@@ -169,6 +174,14 @@ def chat_with_layers(message, history):
         
         # Add to brain memory
         brain.short_memory.add("assistant", reply)
+        
+        # Track user profile
+        profile = get_profile("default")
+        profile.add_query(message)
+        
+        # Learn from feedback
+        learning = get_learning_engine()
+        learning.feedback.add(message, reply, 5)  # Default rating
         
     except Exception as e:
         reply = f"Error: {str(e)[:100]}"
