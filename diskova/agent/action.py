@@ -48,6 +48,15 @@ class ToolRegistry:
         except ImportError:
             pass
         
+        # Add language tools
+        try:
+            from language_tools import detect_language, translate, detect_and_translate
+            self.tools["detect_lang"] = detect_language
+            self.tools["translate"] = translate
+            self.tools["multilang"] = detect_and_translate
+        except ImportError:
+            pass
+        
         # Fallback search if import fails
         if "search" not in self.tools:
             def search_web(query: str) -> str:

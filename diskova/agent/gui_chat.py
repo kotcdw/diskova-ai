@@ -280,7 +280,8 @@ def create_gui():
 - **Tools**: Search, weather, stock, code実行
 - **Voice**: Speech input {"✓" if voice_available else "(need mic)"}
 - **Internet**: Live data from web
-- ** Productivity**: Notes, reminders, calendar
+- **Productivity**: Notes, reminders, calendar
+- **Languages**: Translation (10+ languages)
                 """)
                 gr.Markdown("### Examples")
                 gr.Examples(
