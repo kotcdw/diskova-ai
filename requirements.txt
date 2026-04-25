@@ -56,3 +56,16 @@ python-dotenv==1.0.0
 
 # CORS
 starlette==0.35.1
+
+# ========================
+# AI AGENT DEPENDENCIES
+# ========================
+
+# MCP Server
+fastmcp>=0.1.0
+
+# GUI
+gradio>=5.0.0
+
+# Local LLM Client
+requests
