@@ -223,11 +223,7 @@ def create_gui():
         
         with gr.Row():
             with gr.Column(scale=3):
-                chatbot = gr.Chatbot(
-                    height=500,
-                    show_copy_button=True,
-                    likeable=True,
-                )
+                chatbot = gr.Chatbot(height=500)
                 
                 with gr.Row():
                     msg_input = gr.Textbox(
