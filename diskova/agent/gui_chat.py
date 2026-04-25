@@ -26,6 +26,14 @@ except ImportError:
     VOICE_AVAILABLE = False
     print("Note: Voice input requires 'pip install SpeechRecognition'. Using text mode.")
 
+# Try PyAudio for microphone
+try:
+    import pyaudio
+    MIC_AVAILABLE = True
+except ImportError:
+    MIC_AVAILABLE = False
+    print("Note: Microphone needs PyAudio. Install: pip install pyaudio")
+
 try:
     import edge_tts
     TTS_AVAILABLE = True
@@ -81,7 +89,9 @@ def get_stock(sym):
 
 def voice_to_text():
     if not VOICE_AVAILABLE:
-        return "Voice input not available. Install: pip install SpeechRecognition"
+        return "Voice lib not installed. Run: pip install SpeechRecognition"
+    if not MIC_AVAILABLE:
+        return "Microphone needs PyAudio. Run: pip install pyaudio"
     try:
         recognizer = sr.Recognizer()
         with sr.Microphone() as source:
@@ -89,6 +99,10 @@ def voice_to_text():
             audio = recognizer.listen(source, timeout=5)
         text = recognizer.recognize_google(audio)
         return text
+    except sr.WaitTimeoutError:
+        return "No speech detected. Try again."
+    except sr.UnknownValueError:
+        return "Could not understand. Speak clearly."
     except Exception as e:
         return f"Voice error: {str(e)[:40]}"
 
@@ -166,11 +180,11 @@ def chat(message, history):
 
 internet_ok = check_internet()
 status = "Online" if internet_ok else "Offline"
-voice_status = "Ready" if VOICE_AVAILABLE else "Not Installed"
+mic_status = "Ready" if MIC_AVAILABLE else "Needs PyAudio"
 tts_status = "Ready" if TTS_AVAILABLE else "Not Installed"
 
 with gr.Blocks(title=f"{APP_NAME}") as app:
-    gr.Markdown(f"## {APP_NAME}\n**Creator: {CREATOR} | {CREATOR_LOCATION}**\n\n- Status: {status} | Model: {OLLAMA_MODEL}\n\n- Microphone: {voice_status}\n- Speech: {tts_status}**")
+    gr.Markdown(f"## {APP_NAME}\n**Creator: {CREATOR} | {CREATOR_LOCATION}**\n\n- Status: {status} | Model: {OLLAMA_MODEL}\n\n- Microphone: {mic_status}\n- Speech: {tts_status}**")
     
     with gr.Row():
         with gr.Column(scale=3):
