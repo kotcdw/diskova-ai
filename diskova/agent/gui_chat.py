@@ -106,6 +106,18 @@ async def text_to_speech(text):
 def auto_detect_and_tool(message):
     msg = message.lower()
     
+    # Identity question - FIRST PRIORITY
+    if "what is your name" in msg or "who are you" in msg or "your name" in msg or "who created you" in msg or "who made you" in msg:
+        return "I am diskova+ ai, created by Joseph Amaning Kwarteng from Ghana. I depend on Alibaba Cloud (Ollama) to function."
+    
+    # Hello / greeting
+    if "hello" in msg or "hi" in msg or "hey" in msg or "greetings" in msg:
+        return "Hello! I am diskova+ ai, your AI assistant. How can I help you today?"
+    
+    # Help question
+    if "help" in msg or "what can you do" in msg:
+        return "I can help you with:\n- Weather updates\n- Stock prices\n- Web search\n- General questions\n- And more!"
+    
     if "weather" in msg:
         loc = re.search(r'in\s+(\w+)', msg)
         location = loc.group(1) if loc else "Tokyo"
@@ -185,7 +197,13 @@ with gr.Blocks(title=f"{APP_NAME}") as app:
             
             gr.Markdown("### Examples")
             gr.Examples(
-                examples=[["Hello!"], ["Weather in Tokyo"], ["AAPL stock"]],
+                examples=[
+                    ["What is your name?"],
+                    ["Hello!"],
+                    ["Weather in Tokyo"],
+                    ["AAPL stock"],
+                    ["What can you do?"],
+                ],
                 inputs=msg,
             )
     
