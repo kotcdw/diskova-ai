@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "PowerfulBrain": {
+      "command": "python",
+      "args": [
+        "C:\\Users\\GPHA-TM\\Desktop\\ai-coding-ecosystem\\brain_server.py"
+      ],
+      "env": {},
+      "description": "AI Coding Agent Brain - 8 powerful MCP tools for semantic memory, code snippets, session tracking, code review, project analysis, task tracking, documentation generation, and pattern recall"
+    }
+  }
+}

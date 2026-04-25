@@ -1,0 +1,36 @@
+{
+  "brain_name": "PowerfulBrain",
+  "version": "1.0",
+  "llm_config": {
+    "provider": "ollama",
+    "model": "qwen2.5-coder:1.5b",
+    "fallback_model": "deepseek-coder-v2:6.7b",
+    "temperature": 0.7,
+    "max_tokens": 2048
+  },
+  "mcp_config": {
+    "server_name": "PowerfulBrain",
+    "tools_enabled": [
+      "search_knowledge",
+      "get_code_snippet",
+      "save_session_memory",
+      "review_code",
+      "analyze_project",
+      "update_task_status",
+      "generate_docs",
+      "recall_pattern",
+      "list_memory_stats"
+    ]
+  },
+  "knowledge_config": {
+    "base_dir": "knowledge",
+    "auto_save_sessions": true,
+    "max_patterns_display": 5
+  },
+  "code_review_rules": {
+    "max_line_length": 120,
+    "check_error_handling": true,
+    "check_documentation": true,
+    "check_debug_statements": true
+  }
+}
