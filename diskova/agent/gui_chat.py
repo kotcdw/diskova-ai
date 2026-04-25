@@ -240,64 +240,114 @@ def create_gui():
         pass
     
     with gr.Blocks(title=title) as app:
-        gr.Markdown(f"# {title}")
-        gr.Markdown(f"""### Status: {'Online' if ollama_ok else 'Offline'} | Model: {config.get('model')}
+        gr.Markdown("""
+        <div style="text-align: center; padding: 20px; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); border-radius: 10px; margin-bottom: 20px;">
+            <h1 style="color: white; margin: 0;">🤖 Diskova AI</h1>
+            <p style="color: #e0e0e0; margin: 5px 0 0 0;">Your Local AI Coding Assistant</p>
+        </div>
+        """)
         
-**Layers Active:**
-- Perception: Text Processing ✓
-- Brain: NLP, Memory, Reasoning ✓
-- Action: Tool Calling ✓
-- Response: Output Formatting ✓
-""")
+        status_color = "🟢 Online" if ollama_ok else "🔴 Offline"
+        gr.Markdown(f"""
+        **Status:** {status_color} | **Model:** {config.get('model')}
+        
+        **Architecture:**
+        - 🔤 Perception (Input) ✓
+        - 🧠 Brain (NLP + Memory) ✓
+        - 🔧 Action (Tools) ✓
+        - 📝 Response (Output) ✓
+        """)
         
         with gr.Row():
             with gr.Column(scale=3):
+                gr.Markdown("### 💬 Chat")
                 chatbot = gr.Chatbot(height=500)
                 
                 with gr.Row():
                     msg_input = gr.Textbox(
                         show_label=False, 
-                        placeholder="Ask me anything... (Press Enter)",
+                        placeholder="Type your message here... (Press Enter to send)",
                         scale=4, 
                         container=True
                     )
-                    submit_btn = gr.Button("Send", variant="primary", scale=1)
-                    voice_btn = gr.Button("🎤 Voice", scale=1)
+                    submit_btn = gr.Button("📤 Send", variant="primary", scale=1)
+                
+                with gr.Row():
+                    voice_btn = gr.Button("🎤 Voice", variant="secondary")
                     audio_input = gr.Audio(sources=["microphone"], type="filepath", visible=False)
-                    audio_input.change(process_voice, [audio_input, chatbot], [msg_input, chatbot])
-                    voice_btn.click(lambda: gr.Audio(interactive=True), outputs=audio_input)
+                    
+                    clear_btn = gr.Button("🗑️ Clear", variant="stop")
             
             with gr.Column(scale=1):
-                gr.Markdown("### Quick Actions")
-                gr.Button("Clear Chat", variant="secondary").click(
-                    lambda: (None, []), 
-                    outputs=[msg_input, chatbot]
+                gr.Markdown("### ⚡ Quick Actions")
+                gr.Button("🌐 Web Search", variant="primary").click(
+                    lambda: "Search for ", 
+                    outputs=msg_input
                 )
-                gr.Markdown("### Capabilities")
+                gr.Button("🌤️ Weather").click(
+                    lambda: "What's the weather in ", 
+                    outputs=msg_input
+                )
+                gr.Button("📅 Calendar").click(
+                    lambda: "Show my calendar", 
+                    outputs=msg_input
+                )
+                gr.Button("📝 Reminders").click(
+                    lambda: "Show my reminders", 
+                    outputs=msg_input
+                )
+                gr.Button("🖥️ Code").click(
+                    lambda: "Run code: ", 
+                    outputs=msg_input
+                )
+                gr.Button("🌍 Translate").click(
+                    lambda: "Translate hello to ", 
+                    outputs=msg_input
+                )
+                
+                gr.Markdown("### ✨ Capabilities")
                 gr.Markdown(f"""
-- **NLU**: Intent detection
-- **Memory**: Context awareness  
-- **Tools**: Search, weather, stock, code実行
-- **Voice**: Speech input {"✓" if voice_available else "(need mic)"}
-- **Internet**: Live data from web
-- **Productivity**: Notes, reminders, calendar
-- **Languages**: Translation (10+ languages)
+                - **🔍 Search**: Web + Wikipedia
+                - **🌤️ Weather**: Live weather
+                - **📈 Stocks**: Crypto/Forex
+                - **💻 Code**: Run Python/JS
+                - **📝 Productivity**: Notes, Reminders
+                - **📅 Calendar**: Events + ICS
+                - **📧 Email**: Send/Receive
+                - **🌍 Languages**: 20+ Translation
+                - **💾 Memory**: Session + Knowledge
+                - **🎤 Voice**: Speech input
                 """)
-                gr.Markdown("### Examples")
+                
+                gr.Markdown("### 💡 Examples")
                 gr.Examples(
                     examples=[
                         ["Hello!"],
-                        ["Write hello world in Python"],
-                        ["Search for python fastmcp"],
-                        ["Calculate 2+2*3"],
+                        ["What's the weather in Tokyo?"],
+                        ["Search for AI trends 2026"],
+                        ["Add reminder: Check email at 2pm"],
+                        ["Translate thank you to Japanese"],
+                        ["Calculate 123 * 456"],
+                        ["Add note: Project ideas - Phase 1"],
+                        ["Run: print('Hello World')"],
                     ],
                     inputs=msg_input,
                 )
         
+        # Event handlers
+        clear_btn.click(lambda: ("", []), outputs=[msg_input, chatbot])
         submit_btn.click(chat_with_layers, [msg_input, chatbot], [msg_input, chatbot])
         msg_input.submit(chat_with_layers, [msg_input, chatbot], [msg_input, chatbot])
+        voice_btn.click(lambda: None, outputs=audio_input)
         
-    return app, port
+        # Footer
+        gr.Markdown("""
+        ---
+        *Diskova AI - Built with 4-Layer AI Architecture*
+        *Powered by Ollama (qwen2.5-coder:1.5b)*
+        """)
+        
+        return app, port
 
 
 def main():
