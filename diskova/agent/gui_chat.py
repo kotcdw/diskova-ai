@@ -1,8 +1,14 @@
 #!/usr/bin/env python
 """
-Diskova AI - Chat Interface with MCP Server
-=====================================
-A clean Gradio chat interface that also serves MCP tools.
+Diskova AI - Complete AI Assistant
+================================
+A full implementation of modern AI assistant architecture.
+
+Layers:
+- Perception: Text input processing
+- Brain: NLP, Reasoning, Memory
+- Action: Tool calling
+- Response: Output formatting
 """
 
 import os
@@ -19,10 +25,15 @@ except ImportError:
     subprocess.run([sys.executable, "-m", "pip", "install", "gradio", "-q"])
     import gradio as gr
 
+# Import layers
 BASE_DIR = Path(__file__).parent
 sys.path.insert(0, str(BASE_DIR))
 
-current_model = os.environ.get("OLLAMA_MODEL", "qwen2.5-coder:1.5b")
+# Import our layers
+from perception import TextInput, VoiceInput, ImageInput
+from brain import Brain, get_brain
+from action import ActionEngine, get_action_engine
+from response import OutputHandler, get_output_handler
 
 
 def check_port(port):
@@ -77,43 +88,44 @@ def get_config():
     return defaults
 
 
-# MCP Tools
-def search_knowledge(query: str, category: str = "all") -> str:
-    """Search your knowledge base."""
-    return f"Searched '{query}' in {category} - No results yet. Add knowledge to knowledge/ folder."
-
-
-def get_code_snippet(language: str, snippet_type: str = "hello") -> str:
-    """Get a code snippet."""
-    snippets = {
-        "python": {"hello": "print('Hello, World!')"},
-        "javascript": {"hello": "console.log('Hello, World!');"},
-        "go": {"hello": 'fmt.Println("Hello, World!")'},
-    }
-    return snippets.get(language, {}).get(snippet_type, "# Not found")
-
-
-def create_project(template: str, project_name: str) -> str:
-    """Create a new project from template."""
-    return f"Would create {template} project: {project_name}"
-
-
-def analyze_project(path: str = ".") -> str:
-    """Analyze project structure."""
-    return "Project analysis: No data yet"
-
-
-# Chat function
-def chat(message, history):
+def chat_with_layers(message, history):
+    """Chat using all AI assistant layers."""
     if not message or not message.strip():
         return "", history
     
     message = message.strip()
     history.append([message, None])
+    
     config = get_config()
-    reply = "Starting up..."
+    reply = "Processing..."
     
     try:
+        # 1. PERCEPTION LAYER - Process input
+        text_input = TextInput()
+        perception_result = text_input.process(message)
+        
+        # 2. BRAIN LAYER - Process with NLP and Memory
+        brain = get_brain()
+        brain_processed = brain.process(message)
+        intent = brain_processed["parsed"]["intents"][0]
+        
+        # 3. ACTION LAYER - Determine tool usage
+        action_engine = get_action_engine()
+        tool_calls = action_engine.determine_tool_use(intent, message)
+        
+        # Execute tools if needed
+        tool_results = []
+        if tool_calls:
+            tool_results = action_engine.execute_tools(tool_calls)
+        
+        # 4. Build prompt for LLM
+        llm_messages = brain.generate_prompt()
+        llm_messages.append({
+            "role": "user",
+            "content": message
+        })
+        
+        # 5. Call LLM (Ollama)
         if config.get("provider") == "lmstudio":
             url = config.get("lmstudio", {}).get("base_url", "http://localhost:1234/v1")
             model = config.get("lmstudio", {}).get("model") or config.get("model")
@@ -121,15 +133,15 @@ def chat(message, history):
                 import requests
                 response = requests.post(
                     f"{url}/chat/completions",
-                    json={"model": model, "messages": [{"role": "user", "content": message}]},
+                    json={"model": model, "messages": llm_messages},
                     timeout=120
                 )
                 if response.status_code == 200:
                     reply = response.json().get("choices", [{}])[0].get("message", {}).get("content", "No response")
                 else:
-                    reply = f"LM Studio error: {response.status_code} - {response.text[:100]}"
+                    reply = f"LM Studio error: {response.status_code}"
             except Exception as e:
-                reply = f"LM Studio not available: {str(e)[:100]}"
+                reply = f"LM Studio: {str(e)[:80]}"
         else:
             url = config.get("ollama", {}).get("base_url", "http://localhost:11434")
             model = config.get("model", "qwen2.5-coder:1.5b")
@@ -137,7 +149,7 @@ def chat(message, history):
                 import requests
                 response = requests.post(
                     f"{url}/api/chat",
-                    json={"model": model, "messages": [{"role": "user", "content": message}], "stream": False},
+                    json={"model": model, "messages": llm_messages, "stream": False},
                     timeout=120
                 )
                 if response.status_code == 200:
@@ -146,22 +158,29 @@ def chat(message, history):
                     if not reply:
                         reply = result.get("response", "No response")
                 else:
-                    reply = f"Ollama error: {response.status_code}"
-            except requests.exceptions.ConnectionError:
-                reply = "Cannot connect to Ollama. Is Ollama running? Start with: ollama serve"
+                    reply = f"Ollama: {response.status_code}"
             except Exception as e:
                 reply = f"Error: {str(e)[:100]}"
+        
+        # 6. RESPONSE LAYER - Format output
+        if tool_results:
+            tool_info = "\n".join([f"Tool: {t['tool']} -> {t['result'][:100]}" for t in tool_results])
+            reply = f"{reply}\n\n---\n{tool_info}"
+        
+        # Add to brain memory
+        brain.short_memory.add("assistant", reply)
+        
     except Exception as e:
         reply = f"Error: {str(e)[:100]}"
     
     if not reply:
-        reply = "No response from model"
+        reply = "No response"
     
     history[-1][1] = reply
     return "", history
 
 
-# Check if MCP server mode
+# Check MCP mode
 MCP_SERVER = os.environ.get("GRADIO_MCP_SERVER", "false").lower() == "true"
 
 
@@ -170,6 +189,7 @@ def create_gui():
     port = config.get("gui", {}).get("port", 7860)
     title = config.get("gui", {}).get("title", "Diskova AI")
     
+    # Check services
     ollama_url = config.get("ollama", {}).get("base_url", "http://localhost:11434")
     ollama_ok = False
     try:
@@ -177,20 +197,16 @@ def create_gui():
     except:
         pass
     
-    # Expose MCP tools if enabled
-    tools = []
-    if MCP_SERVER:
-        from gradio.tools import Tool
-        tools = [
-            Tool(name="search_knowledge", fn=search_knowledge, description="Search knowledge base"),
-            Tool(name="get_code_snippet", fn=get_code_snippet, description="Get code snippet"),
-            Tool(name="create_project", fn=create_project, description="Create project"),
-            Tool(name="analyze_project", fn=analyze_project, description="Analyze project"),
-        ]
-    
-    with gr.Blocks(title=title, tools=tools if tools else None) as app:
+    with gr.Blocks(title=title) as app:
         gr.Markdown(f"# {title}")
-        gr.Markdown(f"### Status: {'Online' if ollama_ok else 'Offline - Start Ollama with: ollama serve'} | Model: {config.get('model')} | MCP: {MCP_SERVER}")
+        gr.Markdown(f"""### Status: {'Online' if ollama_ok else 'Offline'} | Model: {config.get('model')}
+        
+**Layers Active:**
+- Perception: Text Processing ✓
+- Brain: NLP, Memory, Reasoning ✓
+- Action: Tool Calling ✓
+- Response: Output Formatting ✓
+""")
         
         with gr.Row():
             with gr.Column(scale=3):
@@ -203,7 +219,7 @@ def create_gui():
                 with gr.Row():
                     msg_input = gr.Textbox(
                         show_label=False, 
-                        placeholder="Ask me anything... (Press Enter to send)",
+                        placeholder="Ask me anything... (Press Enter)",
                         scale=4, 
                         container=True
                     )
@@ -215,23 +231,26 @@ def create_gui():
                     lambda: (None, []), 
                     outputs=[msg_input, chatbot]
                 )
+                gr.Markdown("### Capabilities")
+                gr.Markdown("""
+- **NLU**: Intent detection
+- **Memory**: Context awareness  
+- **Tools**: Search, code execution
+- **Voice**: Speech input (coming)
+                """)
                 gr.Markdown("### Examples")
                 gr.Examples(
                     examples=[
-                        ["Hello, how are you?"],
-                        ["Write a hello world in Python"],
-                        ["Explain what is an API"],
+                        ["Hello!"],
+                        ["Write hello world in Python"],
+                        ["Search for python fastmcp"],
+                        ["Calculate 2+2*3"],
                     ],
                     inputs=msg_input,
                 )
         
-        # Event handlers
-        submit_btn.click(chat, [msg_input, chatbot], [msg_input, chatbot])
-        msg_input.submit(chat, [msg_input, chatbot], [msg_input, chatbot])
-        
-        # Clear input on submit
-        def clear_input():
-            return ""
+        submit_btn.click(chat_with_layers, [msg_input, chatbot], [msg_input, chatbot])
+        msg_input.submit(chat_with_layers, [msg_input, chatbot], [msg_input, chatbot])
         
     return app, port
 
@@ -245,11 +264,10 @@ def main():
         port = port + 1
     
     app, _ = create_gui()
-    print(f"Diskova AI - http://localhost:{port}")
+    print(f"Diskova AI - Full Architecture")
+    print(f"URL: http://localhost:{port}")
     print(f"Model: {config.get('model')}")
-    if MCP_SERVER:
-        print(f"MCP Server enabled - Use with Claude Desktop")
-    app.launch(server_port=port, server_name="0.0.0.0", show_error=True, mcp_server=MCP_SERVER)
+    app.launch(server_port=port, server_name="0.0.0.0", show_error=True)
 
 
 if __name__ == "__main__":
