@@ -347,12 +347,9 @@ def create_gui():
     with gr.Blocks(
         title="PowerfulBrain AI Coding Agent",
         theme=gr.themes.Soft(
-            primary_hue=ACCENT_COLOR,
-            neutral_hue="#64748b",
-            background_base_color=BG_COLOR,
+            primary_hue="indigo",
         ),
         css=custom_css,
-        layout="full"
     ) as app:
         
         # Header
@@ -415,9 +412,7 @@ def create_gui():
                 # Chat interface
                 chatbot = gr.Chatbot(
                     height=500,
-                    bubble_full_width=False,
                     avatar_images=(None, None),
-                    show_share_button=False,
                 )
                 
                 # Input area
@@ -467,14 +462,14 @@ def create_gui():
 def main():
     """Main entry point."""
     print("=" * 60)
-    print("🧠 PowerfulBrain AI Coding Agent - GUI")
+    print("PowerfulBrain AI Coding Agent - GUI")
     print("=" * 60)
     
     # Create and launch GUI
     app = create_gui()
     
-    print("\n🚀 Starting GUI...")
-    print("📍 URL: http://localhost:7860")
+    print("\nStarting GUI...")
+    print("URL: http://localhost:7860")
     print("\nPress Ctrl+C to stop\n")
     
     # Open browser automatically
