@@ -1,13 +1,20 @@
 #!/usr/bin/env python
-"""Diskova AI - Auto-Internet GUI"""
+"""Diskova AI - Voice Input GUI"""
 
 import gradio as gr
 import requests
 import os
 import re
+import threading
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5-coder:1.5b")
+
+try:
+    import speech_recognition as sr
+    VOICE_AVAILABLE = True
+except ImportError:
+    VOICE_AVAILABLE = False
 
 
 def check_internet():
@@ -15,11 +22,7 @@ def check_internet():
         requests.get("https://www.google.com", timeout=3)
         return True
     except:
-        try:
-            requests.get("https://api.github.com", timeout=3)
-            return True
-        except:
-            return False
+        return False
 
 
 def web_search(query):
@@ -60,36 +63,48 @@ def get_stock(sym):
         return f"{sym}: unavailable"
 
 
+def voice_to_text():
+    """Convert voice to text using speech recognition"""
+    if not VOICE_AVAILABLE:
+        return "Voice recognition not installed. Run: pip install SpeechRecognition"
+    
+    try:
+        recognizer = sr.Recognizer()
+        with sr.Microphone() as source:
+            recognizer.adjust_for_ambient_noise(source, duration=1)
+            audio = recognizer.listen(source, timeout=5)
+        
+        text = recognizer.recognize_google(audio)
+        return text
+    except sr.WaitTimeoutError:
+        return "No speech detected"
+    except sr.UnknownValueError:
+        return "Could not understand"
+    except Exception as e:
+        return f"Voice error: {str(e)[:50]}"
+
+
 def auto_detect_and_tool(message):
-    """Auto-detect request type and get info"""
     msg = message.lower()
     
-    # Weather
     if "weather" in msg:
-        loc = re.search(r'in\s+(\w+)', msg) or re.search(r'(\w+)\s+weather', msg)
+        loc = re.search(r'in\s+(\w+)', msg)
         location = loc.group(1) if loc else "Tokyo"
         return get_weather(location)
     
-    # Stock
     if "stock" in msg or "price" in msg or "$" in msg:
-        sym = re.search(r'([A-Z]{1,5})\s*(?:stock|price|\$)', msg.upper()) or re.search(r'^([A-Z]+)', msg.upper())
-        if not sym:
-            symbols = re.findall(r'\b[A-Z]{2,5}\b', msg.upper())
-            sym = symbols[0] if symbols else "AAPL"
-        else:
-            sym = sym.group(1)
+        symbols = re.findall(r'\b[A-Z]{2,5}\b', msg.upper())
+        sym = symbols[0] if symbols else "AAPL"
         return get_stock(sym)
     
-    # Search
-    if "search" in msg or "find" in msg or "look up" in msg:
+    if "search" in msg or "find" in msg:
         query = message
-        for w in ["search", "find", "look up", "for"]:
+        for w in ["search", "find", "look up"]:
             query = query.replace(w, "")
         return web_search(query.strip())
     
-    # Translate
-    if "translate" in msg or "japanese" in msg or "spanish" in msg or "french" in msg:
-        return f"Translation: {message} (demo mode)"
+    if "translate" in msg:
+        return f"Translation requested: {message} (demo)"
     
     return None
 
@@ -101,12 +116,10 @@ def chat(message, history):
     history.append({"role": "user", "content": message})
     reply = "Thinking..."
     
-    # Auto-check for tool requests
     tool_result = auto_detect_and_tool(message)
     if tool_result:
         reply = tool_result
     else:
-        # Call Ollama
         try:
             r = requests.post(
                 f"{OLLAMA_URL}/api/chat",
@@ -120,54 +133,50 @@ def chat(message, history):
     
     history.append({"role": "assistant", "content": reply})
     return "", history
-    
-    history.append([message, None])
-    reply = "Thinking..."
-    
-    # Auto-check for tool requests
-    tool_result = auto_detect_and_tool(message)
-    if tool_result:
-        reply = tool_result
-    else:
-        # Call Ollama
-        try:
-            r = requests.post(
-                f"{OLLAMA_URL}/api/chat",
-                json={"model": OLLAMA_MODEL, "messages": [{"role": "user", "content": message}], "stream": False},
-                timeout=120
-            )
-            if r.status_code == 200:
-                reply = r.json().get("message", {}).get("content", "") or "No response"
-        except Exception as e:
-            reply = f"Ollama error: {str(e)[:60]}"
-    
-    history[-1][1] = reply
-    return "", history
 
 
 internet_ok = check_internet()
 status = "Online" if internet_ok else "Offline"
 
-with gr.Blocks(title="Diskova AI") as app:
-    gr.Markdown(f"## Diskova AI\n**Status: {status} | Model: {OLLAMA_MODEL} | Internet: Auto-connected**")
+with gr.Blocks(title="Diskova AI - Voice Enabled") as app:
+    gr.Markdown(f"## Diskova AI\n**Status: {status} | Model: {OLLAMA_MODEL} | Voice: {'Ready' if VOICE_AVAILABLE else 'Not Installed'}**")
     
-    chatbot = gr.Chatbot(height=500)
     with gr.Row():
-        msg = gr.Textbox(placeholder="Ask me anything... (auto-searches web, weather, stocks)", scale=5)
-        btn = gr.Button("Send", variant="primary")
+        with gr.Column(scale=3):
+            chatbot = gr.Chatbot(height=500)
+            with gr.Row():
+                msg = gr.Textbox(placeholder="Type or record voice...", label="Message", scale=5)
+                btn_send = gr.Button("Send", variant="primary")
+                btn_voice = gr.Button("🎤", variant="secondary")
+        
+        with gr.Column(scale=1):
+            gr.Markdown("### Quick Actions")
+            gr.Button("Weather", size="sm").click(lambda: "Tokyo weather", outputs=[msg])
+            gr.Button("Stocks", size="sm").click(lambda: "AAPL stock", outputs=[msg])
+            gr.Button("Search", size="sm").click(lambda: "Search for AI", outputs=[msg])
+            
+            gr.Markdown("### Voice")
+            gr.Markdown(f"**Microphone:** {'Ready' if VOICE_AVAILABLE else 'Not Available'}")
+            if VOICE_AVAILABLE:
+                gr.Button("Record Voice", variant="stop").click(
+                    voice_to_text,
+                    outputs=msg
+                )
+            else:
+                gr.Markdown("Install: `pip install SpeechRecognition`")
+            
+            gr.Markdown("### Examples")
+            gr.Examples(
+                examples=[
+                    ["Hello!"],
+                    ["Weather in Tokyo"],
+                    ["AAPL stock price"],
+                    ["Search for AI news"],
+                ],
+                inputs=msg,
+            )
     
-    gr.Examples(
-        examples=[
-            ["Hello!"],
-            ["Weather in Tokyo"],
-            ["AAPL stock price"],
-            ["Search for AI trends 2026"],
-            ["Translate hello to Japanese"],
-        ],
-        inputs=msg,
-    )
-    
-    btn.click(chat, [msg, chatbot], [msg, chatbot])
+    btn_send.click(chat, [msg, chatbot], [msg, chatbot])
     msg.submit(chat, [msg, chatbot], [msg, chatbot])
 
 print("Diskova AI: http://localhost:7860")
