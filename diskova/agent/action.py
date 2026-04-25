@@ -73,6 +73,26 @@ class ToolRegistry:
         except ImportError:
             pass
         
+        # Add email tools
+        try:
+            from email_integration import send_email, get_emails, configure_email
+            self.tools["email"] = send_email
+            self.tools["get_mail"] = get_emails
+            self.tools["config_email"] = configure_email
+        except ImportError:
+            pass
+        
+        # Add calendar tools
+        try:
+            from calendar_integration import (
+                add_calendar_event, list_calendar_events, export_ics_file
+            )
+            self.tools["add_event"] = add_calendar_event
+            self.tools["list_events"] = list_calendar_events
+            self.tools["export_ics"] = export_ics_file
+        except ImportError:
+            pass
+        
         # Fallback search if import fails
         if "search" not in self.tools:
             def search_web(query: str) -> str:

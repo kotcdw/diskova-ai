@@ -191,6 +191,21 @@ MCP server exposes 29 additional tools:
 - `browser_tool` - Web browsing
 - And 23 more...
 
+#### Email Integration (NEW)
+| Tool | Function | Status |
+|------|----------|--------|
+| **Send Email** | `send_email()` | ✅ |
+| **Get Emails** | `get_emails()` | ✅ |
+| **Configure** | `configure_email()` | ✅ |
+
+#### Calendar Integration (NEW)
+| Tool | Function | Status |
+|------|----------|--------|
+| **Add Event** | `add_calendar_event()` | ✅ |
+| **List Events** | `list_calendar_events()` | ✅ |
+| **Export ICS** | `export_ics_file()` | ✅ |
+| **ICS Import** | `import_ics()` | ✅ |
+
 ---
 
 ## Layer 4: RESPONSE (Output Generation)
