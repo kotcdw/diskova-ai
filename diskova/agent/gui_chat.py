@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-"""Diskova AI - Voice Input GUI"""
+"""Diskova AI - Voice GUI (STT + TTS)"""
 
 import gradio as gr
 import requests
 import os
 import re
-import threading
+import asyncio
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen2.5-coder:1.5b")
@@ -15,6 +15,12 @@ try:
     VOICE_AVAILABLE = True
 except ImportError:
     VOICE_AVAILABLE = False
+
+try:
+    import edge_tts
+    TTS_AVAILABLE = True
+except ImportError:
+    TTS_AVAILABLE = False
 
 
 def check_internet():
@@ -64,24 +70,28 @@ def get_stock(sym):
 
 
 def voice_to_text():
-    """Convert voice to text using speech recognition"""
     if not VOICE_AVAILABLE:
-        return "Voice recognition not installed. Run: pip install SpeechRecognition"
-    
+        return "Voice not available"
     try:
         recognizer = sr.Recognizer()
         with sr.Microphone() as source:
             recognizer.adjust_for_ambient_noise(source, duration=1)
             audio = recognizer.listen(source, timeout=5)
-        
         text = recognizer.recognize_google(audio)
         return text
-    except sr.WaitTimeoutError:
-        return "No speech detected"
-    except sr.UnknownValueError:
-        return "Could not understand"
     except Exception as e:
-        return f"Voice error: {str(e)[:50]}"
+        return f"Voice error: {str(e)[:30]}"
+
+
+async def text_to_speech(text):
+    if not TTS_AVAILABLE:
+        return None
+    try:
+        communicate = edge_tts.Communicate(text, "en-US-JennyNeural")
+        await communicate.save("response.mp3")
+        return "response.mp3"
+    except Exception as e:
+        return None
 
 
 def auto_detect_and_tool(message):
@@ -102,9 +112,6 @@ def auto_detect_and_tool(message):
         for w in ["search", "find", "look up"]:
             query = query.replace(w, "")
         return web_search(query.strip())
-    
-    if "translate" in msg:
-        return f"Translation requested: {message} (demo)"
     
     return None
 
@@ -137,17 +144,18 @@ def chat(message, history):
 
 internet_ok = check_internet()
 status = "Online" if internet_ok else "Offline"
+voice_status = "Ready" if VOICE_AVAILABLE else "Not Installed"
+tts_status = "Ready" if TTS_AVAILABLE else "Not Installed"
 
-with gr.Blocks(title="Diskova AI - Voice Enabled") as app:
-    gr.Markdown(f"## Diskova AI\n**Status: {status} | Model: {OLLAMA_MODEL} | Voice: {'Ready' if VOICE_AVAILABLE else 'Not Installed'}**")
+with gr.Blocks(title="Diskova AI - Voice") as app:
+    gr.Markdown(f"## Diskova AI\n**Status: {status} | Model: {OLLAMA_MODEL}\n\n- Microphone: {voice_status}\n- Speech: {tts_status}**")
     
     with gr.Row():
         with gr.Column(scale=3):
             chatbot = gr.Chatbot(height=500)
             with gr.Row():
-                msg = gr.Textbox(placeholder="Type or record voice...", label="Message", scale=5)
+                msg = gr.Textbox(placeholder="Type or click mic...", label="Message", scale=5)
                 btn_send = gr.Button("Send", variant="primary")
-                btn_voice = gr.Button("🎤", variant="secondary")
         
         with gr.Column(scale=1):
             gr.Markdown("### Quick Actions")
@@ -155,24 +163,20 @@ with gr.Blocks(title="Diskova AI - Voice Enabled") as app:
             gr.Button("Stocks", size="sm").click(lambda: "AAPL stock", outputs=[msg])
             gr.Button("Search", size="sm").click(lambda: "Search for AI", outputs=[msg])
             
-            gr.Markdown("### Voice")
-            gr.Markdown(f"**Microphone:** {'Ready' if VOICE_AVAILABLE else 'Not Available'}")
+            gr.Markdown("### Voice Input")
             if VOICE_AVAILABLE:
-                gr.Button("Record Voice", variant="stop").click(
-                    voice_to_text,
-                    outputs=msg
+                gr.Button("Record Mic", variant="stop").click(voice_to_text, outputs=msg)
+            
+            gr.Markdown("### Voice Output")
+            if TTS_AVAILABLE:
+                gr.Button("Speak Response", variant="secondary").click(
+                    lambda: asyncio.run(text_to_speech("Hello! This is a test response.")),
+                    outputs=gr.Audio()
                 )
-            else:
-                gr.Markdown("Install: `pip install SpeechRecognition`")
             
             gr.Markdown("### Examples")
             gr.Examples(
-                examples=[
-                    ["Hello!"],
-                    ["Weather in Tokyo"],
-                    ["AAPL stock price"],
-                    ["Search for AI news"],
-                ],
+                examples=[["Hello!"], ["Weather in Tokyo"], ["AAPL stock"]],
                 inputs=msg,
             )
     
