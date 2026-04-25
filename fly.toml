@@ -1,0 +1,15 @@
+app = "diskova-ai"
+primaryRegion = "iad"
+
+[build]
+  builder = "pack"
+
+[[services]]
+  httpPort = 7860
+  internalPort = 7860
+
+  [[services.ports]]
+    port = 7860
+
+[processes]
+  app = "python diskova/agent/gui_chat.py"

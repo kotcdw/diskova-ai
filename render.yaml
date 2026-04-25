@@ -1,0 +1,14 @@
+{
+  "name": "diskova-ai",
+  "version": "1.0.0",
+  "description": "Local AI Coding Assistant",
+  "repository": "https://github.com/kotcdw/diskova-ai",
+  "build": {
+    "builder": "PYTHON",
+    "pythonVersion": "3.11"
+  },
+  "startCommand": "python diskova/agent/gui_chat.py",
+  "env": {
+    "PYTHONPATH": "."
+  }
+}
