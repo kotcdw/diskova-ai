@@ -24,6 +24,7 @@ try:
     VOICE_AVAILABLE = True
 except ImportError:
     VOICE_AVAILABLE = False
+    print("Note: Voice input requires 'pip install SpeechRecognition'. Using text mode.")
 
 try:
     import edge_tts
@@ -80,7 +81,7 @@ def get_stock(sym):
 
 def voice_to_text():
     if not VOICE_AVAILABLE:
-        return "Voice not available"
+        return "Voice input not available. Install: pip install SpeechRecognition"
     try:
         recognizer = sr.Recognizer()
         with sr.Microphone() as source:
@@ -89,7 +90,7 @@ def voice_to_text():
         text = recognizer.recognize_google(audio)
         return text
     except Exception as e:
-        return f"Voice error: {str(e)[:30]}"
+        return f"Voice error: {str(e)[:40]}"
 
 
 async def text_to_speech(text):
