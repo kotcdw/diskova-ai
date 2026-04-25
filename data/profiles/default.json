@@ -10,7 +10,13 @@
   },
   "habits": {
     "common_queries": [
-      "hi"
+      "hi",
+      "what is the weather in ghana",
+      "hello",
+      "Hello!",
+      "Write hello world in Python",
+      "Search for python fastmcp",
+      "Calculate 2+2*3"
     ],
     "time_of_use": {},
     "topics_of_interest": []
@@ -24,6 +30,42 @@
     {
       "query": "hi",
       "timestamp": "2026-04-25T10:04:39.312838"
+    },
+    {
+      "query": "hi",
+      "timestamp": "2026-04-25T10:14:14.442880"
+    },
+    {
+      "query": "what is the weather in ghana",
+      "timestamp": "2026-04-25T10:14:53.815711"
+    },
+    {
+      "query": "hi",
+      "timestamp": "2026-04-25T10:18:37.851424"
+    },
+    {
+      "query": "hello",
+      "timestamp": "2026-04-25T10:42:12.702077"
+    },
+    {
+      "query": "hi",
+      "timestamp": "2026-04-25T10:47:42.421785"
+    },
+    {
+      "query": "Hello!",
+      "timestamp": "2026-04-25T10:47:53.617195"
+    },
+    {
+      "query": "Write hello world in Python",
+      "timestamp": "2026-04-25T10:47:58.889929"
+    },
+    {
+      "query": "Search for python fastmcp",
+      "timestamp": "2026-04-25T10:48:16.400362"
+    },
+    {
+      "query": "Calculate 2+2*3",
+      "timestamp": "2026-04-25T10:48:21.392912"
     }
   ]
 }

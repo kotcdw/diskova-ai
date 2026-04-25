@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1,
+    "text": "Test task",
+    "due": null,
+    "priority": "medium",
+    "category": "task",
+    "completed": false,
+    "created_at": "2026-04-25T10:13:17.710147"
+  }
+]

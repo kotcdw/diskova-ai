@@ -12,5 +12,68 @@
     "rating": 5,
     "type": "rating",
     "timestamp": "2026-04-25T10:04:39.326175"
+  },
+  {
+    "query": "hi",
+    "response": "Hello! How can I assist you today?",
+    "rating": 5,
+    "type": "rating",
+    "timestamp": "2026-04-25T10:14:14.453453"
+  },
+  {
+    "query": "what is the weather in ghana",
+    "response": "As of my last update in 2021, the general climate of Ghana includes:\n\n* Hot summers with daily temperatures reaching over 30\u00b0C (86\u00b0F)\n* Cooler winters with average temperature around 15-20\u00b0C (59-68\u00b0F)\n* Rainfall is moderate to heavy throughout the year\n* Average rainfall falls in July and August\n\nThe capital city, Accra, experiences a wet season from October to April.",
+    "rating": 5,
+    "type": "rating",
+    "timestamp": "2026-04-25T10:14:53.826329"
+  },
+  {
+    "query": "hi",
+    "response": "Hello! How can I help you today?",
+    "rating": 5,
+    "type": "rating",
+    "timestamp": "2026-04-25T10:18:37.862922"
+  },
+  {
+    "query": "hello",
+    "response": "Hello! How can I assist you today?",
+    "rating": 5,
+    "type": "rating",
+    "timestamp": "2026-04-25T10:42:12.714172"
+  },
+  {
+    "query": "hi",
+    "response": "Hello! How can I assist you today?",
+    "rating": 5,
+    "type": "rating",
+    "timestamp": "2026-04-25T10:47:42.438152"
+  },
+  {
+    "query": "Hello!",
+    "response": "Hello! How can I assist you today?",
+    "rating": 5,
+    "type": "rating",
+    "timestamp": "2026-04-25T10:47:53.632037"
+  },
+  {
+    "query": "Write hello world in Python",
+    "response": "Here is a simple \"Hello World\" program in Python:\n\n```python\nprint(\"Hello World\")\n```\n\nWhen you run this code, it will output:\n\n```\nHello World\n```",
+    "rating": 5,
+    "type": "rating",
+    "timestamp": "2026-04-25T10:47:58.900547"
+  },
+  {
+    "query": "Search for python fastmcp",
+    "response": "FastMCP (Fast Matrix Cholesky Product) is a Python library for performing matrix operations in a highly optimized way using C++ and Cython. It's particularly useful for large-scale linear algebra tasks where performance is critical.\n\nYou can install FastMCP using pip:\n\n```bash\npip install fastmcp\n```\n\nHere are some key features of FastMCP:\n\n1. **High Performance**: Utilizes C++ to perform matrix operations efficiently.\n2. **Ease of Use**: Provides a simple interface for performing common matrix ",
+    "rating": 5,
+    "type": "rating",
+    "timestamp": "2026-04-25T10:48:16.412766"
+  },
+  {
+    "query": "Calculate 2+2*3",
+    "response": "2 + 2 * 3 equals 10.",
+    "rating": 5,
+    "type": "rating",
+    "timestamp": "2026-04-25T10:48:21.405028"
   }
 ]
