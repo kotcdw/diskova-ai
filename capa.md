@@ -264,20 +264,32 @@ total_tools = 50+       # From diskova/agent
 
 ---
 
+## How Diskova AI Suppowers opencode
+
+| What opencode Cannot Do | Diskova AI Can | File |
+|----------------------|-------------|------|
+| Remember sessions | ✅ Session memory | `system_tools.py` |
+| Free web browsing | ✅ Web browser | `system_tools.py` |
+| Background processes | ✅ Background manager | `system_tools.py` |
+| File browsing | ✅ File browser | `system_tools.py` |
+| GUI apps | ✅ Gradio | `gui_chat.py` |
+
+---
+
 ## Summary
 
 | Category | Count |
 |----------|-------|
-| Core Tools | 12 |
-| Skills Available | 40+ |
-| Azure Integrations | 25 |
-| Programming Languages | 1 (Python) |
-| Maximum Functions | Unlimited |
+| Core Tools (opencode) | 12 |
+| Skills Available (opencode) | 40+ |
+| Azure Integrations (opencode) | 25 |
+| **Diskova AI Tools** | **70+** ← My extension |
+| **New Capabilities** | **8** ← system_tools.py |
 
-**I am opencode - a helpful CLI assistant, not a magic wand.**
+**Diskova AI = opencode's capabilities + everything it cannot do**
 
 ---
 
 *Generated: April 2026*
-*Tool: opencode CLI*
+*Tool: opencode CLI + Diskova AI extension*
 *Model: big-pickle*

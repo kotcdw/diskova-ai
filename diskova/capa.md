@@ -238,7 +238,7 @@ Features not visible in main UI but available via code.
 | **Multi-Agent** | ✅ | Swarm of agents |
 | **Semantic Memory** | ✅ | Vector semantic search |
 | **Agent Reasoning** | ✅ | Multi-step reasoning |
-| **Custom Tools** | ��� | Extensible registry |
+| **Custom Tools** | ✅ | Extensible registry |
 
 ### Debugging & Development
 | Feature | Status |
@@ -398,6 +398,54 @@ Bot: Saved to knowledge base.
 - [ ] OCR improvements
 - [ ] Agent memory
 - [ ] Plugin marketplace
+
+---
+
+## What opencode CANNOT Do (But Diskova AI Can)
+
+This section maps opencode limitations to Diskova AI capabilities:
+
+| What opencode Cannot | Diskova AI Capability | File |
+|---------------------|---------------------|------|
+| Remember previous sessions | **Session Memory** | `system_tools.py` |
+| Browse internet freely | **Web Browser** | `system_tools.py` |
+| Run background processes | **Background Manager** | `system_tools.py` |
+| Access files without paths | **File Browser** | `system_tools.py` |
+| Create GUI apps | **Gradio GUI** | `gui_chat.py` |
+
+### NEW - System Tools (system_tools.py)
+
+These features are available in Diskova AI but NOT in opencode CLI:
+
+| Feature | Function | Status |
+|---------|----------|--------|
+| **File Browser** | `browse_files()` | ✅ Browse without exact paths |
+| **File Search** | `search_files()` | ✅ Search by name |
+| **Background Processes** | `run_background()` | ✅ Run in background |
+| **Process Manager** | `list_processes()` | ✅ List running processes |
+| **Session Memory** | `remember()` | ✅ Remember conversations |
+| **Recall** | `recall()` | ✅ Search past sessions |
+| **Web Browser** | `browse_web()` | ✅ Full web browsing |
+| **GUI Creator** | `GUICreator` | ✅ Create GUIs |
+
+### Usage
+
+```python
+# Browse files
+browse_files("")
+search_files("*.py")
+
+# Run background
+run_background("python script.py")
+list_processes()
+
+# Remember
+remember("User query", "Bot response")
+recall("search term")
+
+# Web browse
+browse_web("https://example.com")
+```
 
 ---
 

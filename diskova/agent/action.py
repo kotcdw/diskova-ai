@@ -57,6 +57,22 @@ class ToolRegistry:
         except ImportError:
             pass
         
+        # Add system tools (what opencode cannot do)
+        try:
+            from system_tools import (
+                browse_files, search_files, run_background, list_processes,
+                remember, recall, browse_web
+            )
+            self.tools["browse"] = browse_files
+            self.tools["files"] = search_files
+            self.tools["background"] = run_background
+            self.tools["processes"] = list_processes
+            self.tools["remember"] = remember
+            self.tools["recall"] = recall
+            self.tools["web_browse"] = browse_web
+        except ImportError:
+            pass
+        
         # Fallback search if import fails
         if "search" not in self.tools:
             def search_web(query: str) -> str:
