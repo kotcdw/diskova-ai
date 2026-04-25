@@ -277,9 +277,10 @@ def create_gui():
                 gr.Markdown(f"""
 - **NLU**: Intent detection
 - **Memory**: Context awareness  
-- **Tools**: Web search, weather, stock, code実行
+- **Tools**: Search, weather, stock, code実行
 - **Voice**: Speech input {"✓" if voice_available else "(need mic)"}
 - **Internet**: Live data from web
+- ** Productivity**: Notes, reminders, calendar
                 """)
                 gr.Markdown("### Examples")
                 gr.Examples(

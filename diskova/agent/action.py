@@ -30,6 +30,24 @@ class ToolRegistry:
         except ImportError:
             pass
         
+        # Add productivity tools
+        try:
+            from productivity import (
+                add_reminder, list_reminders, complete_reminder,
+                add_event, list_events,
+                add_note, get_note, search_notes
+            )
+            self.tools["reminder"] = add_reminder
+            self.tools["reminders"] = list_reminders
+            self.tools["complete"] = complete_reminder
+            self.tools["event"] = add_event
+            self.tools["events"] = list_events
+            self.tools["note"] = add_note
+            self.tools["get_note"] = get_note
+            self.tools["search_notes"] = search_notes
+        except ImportError:
+            pass
+        
         # Fallback search if import fails
         if "search" not in self.tools:
             def search_web(query: str) -> str:
