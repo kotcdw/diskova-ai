@@ -23,12 +23,34 @@ class ToolRegistry:
         
         # Import internet tools for better search
         try:
-            from internet_tools import search_web as internet_search, get_weather, get_stock_price
-            self.tools["search"] = internet_search
+            from internet_tools import search_web as internet_search_fn, get_weather, get_stock_price
+            self.tools["search"] = internet_search_fn
             self.tools["weather"] = get_weather
             self.tools["stock"] = get_stock_price
         except ImportError:
-            pass
+            # Fallback search function
+            internet_search_fn = None
+        
+        # Define fallback if import failed
+        def web_search_fallback(query: str) -> str:
+            """Search the web (fallback)."""
+            try:
+                response = requests.get(
+                    "https://duckduckgo.com/",
+                    params={"q": query, "format": "json"},
+                    timeout=10
+                )
+                results = response.json().get("Results", [])
+                return "\n".join([r.get("text", "") for r in results[:5]]) or "No results"
+            except Exception as e:
+                return f"Search error: {e}"
+        
+        # Use imported or fallback
+        if internet_search_fn is not None:
+            self.tools["search_web"] = internet_search_fn
+        else:
+            self.tools["search_web"] = web_search_fallback
+            self.tools["search"] = web_search_fallback
         
         # Add productivity tools
         try:
@@ -93,22 +115,6 @@ class ToolRegistry:
         except ImportError:
             pass
         
-        # Fallback search if import fails
-        if "search" not in self.tools:
-            def search_web(query: str) -> str:
-                """Search the web."""
-                try:
-                    response = requests.get(
-                        "https://duckduckgo.com/",
-                        params={"q": query, "format": "json"},
-                        timeout=10
-                    )
-                    results = response.json().get("Results", [])
-                    return "\n".join([r.get("text", "") for r in results[:5]]) or "No results"
-                except Exception as e:
-                    return f"Search error: {e}"
-            self.tools["search"] = search_web
-        
         def run_code(code: str, language: str = "python") -> str:
             """Execute code."""
             import tempfile
@@ -162,12 +168,13 @@ class ToolRegistry:
             
             return op_map.get(operation, lambda: "Unknown op")()
         
-        # Register tools
-        self.tools["search_web"] = search_web
-        self.tools["run_code"] = run_code
-        self.tools["get_time"] = get_time
-        self.tools["calculate"] = calculate
-        self.tools["file_ops"] = file_ops
+        # Register tools - use tools dict
+        base_tools = self.tools.copy()
+        base_tools["run_code"] = run_code
+        base_tools["get_time"] = get_time
+        base_tools["calculate"] = calculate
+        base_tools["file_ops"] = file_ops
+        self.tools = base_tools
     
     def register(self, name: str, func: Callable):
         """Register custom tool."""
