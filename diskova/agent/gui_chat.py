@@ -1,21 +1,14 @@
 #!/usr/bin/env python
 """
-Diskova AI - Complete AI Assistant
-================================
-A full implementation of modern AI assistant architecture.
-
-Layers:
-- Perception: Text input, Voice (STT), Image (CV)
-- Brain: NLP, Reasoning, Memory
-- Action: Tool calling
-- Response: Output formatting
+Diskova AI - Complete AI Assistant GUI
+==============================
+Gradio GUI for Diskova AI with professional layout.
 """
 
 import os
 import sys
 import json
 import subprocess
-import threading
 from pathlib import Path
 from datetime import datetime
 import socket
@@ -25,53 +18,20 @@ try:
 except ImportError:
     subprocess.run([sys.executable, "-m", "pip", "install", "gradio", "-q"])
     import gradio as gr
-except ImportError:
-    subprocess.run([sys.executable, "-m", "pip", "install", "gradio", "-q"])
-    import gradio as gr
 
-# Import layers
 BASE_DIR = Path(__file__).parent
 sys.path.insert(0, str(BASE_DIR))
 
-# Import our layers
 from perception import TextInput, VoiceInput, ImageInput
 from brain import Brain, get_brain
 from action import ActionEngine, get_action_engine
 from response import OutputHandler, get_output_handler
-
-# Import additional features
-from profiles import UserProfile, get_profile
-from continuous_learning import LearningEngine, get_learning_engine
-from knowledge_base import KnowledgeBase, get_knowledge_base
-
-# Voice input state
-voice_input = VoiceInput()
-voice_available = voice_input.available
-
-
-def process_voice(audio_path, history):
-    """Process voice input and return text."""
-    if not audio_path:
-        return "", history
-    
-    try:
-        from perception import VoiceInput
-        vi = VoiceInput()
-        if vi.available:
-            # Note:audio_path is the recorded audio file
-            # Use speech_recognition if available
-            text = vi.listen(timeout=5)
-            if text:
-                history.append([f"[Voice]: {text}", None])
-                return text, history
-    except Exception as e:
-        history.append(["[Voice]", f"Error: {str(e)[:50]}"])
-    
-    return "", history
+from profiles import get_profile
+from continuous_learning import get_learning_engine
+from knowledge_base import get_knowledge_base
 
 
 def check_port(port):
-    """Check if port is available."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
             s.bind(('127.0.0.1', port))
@@ -82,7 +42,6 @@ def check_port(port):
 
 
 def check_service(url):
-    """Check if service is accessible."""
     try:
         import requests
         r = requests.get(url, timeout=2)
@@ -92,9 +51,7 @@ def check_service(url):
 
 
 def get_config():
-    """Load config with env variable fallbacks."""
     config_path = BASE_DIR.parent / "config" / "llm_config.json"
-    
     defaults = {
         "provider": "ollama",
         "model": os.environ.get("OLLAMA_MODEL", "qwen2.5-coder:1.5b"),
@@ -102,115 +59,75 @@ def get_config():
             "base_url": os.environ.get("OLLAMA_URL", "http://localhost:11434"),
             "model": os.environ.get("OLLAMA_MODEL", "qwen2.5-coder:1.5b")
         },
-        "gui": {
-            "port": int(os.environ.get("GUI_PORT", "7860")),
-            "title": "Diskova AI"
-        }
+        "gui": {"port": 7860, "title": "Diskova AI"}
     }
-    
     if config_path.exists():
         try:
             with open(config_path) as f:
                 user_config = json.load(f)
                 user_config["model"] = os.environ.get("OLLAMA_MODEL", user_config.get("model"))
                 user_config["ollama"]["base_url"] = os.environ.get("OLLAMA_URL", user_config["ollama"]["base_url"])
-                user_config["gui"]["port"] = int(os.environ.get("GUI_PORT", str(user_config["gui"]["port"])))
                 return user_config
-        except Exception as e:
-            print(f"Config error: {e}")
+        except:
             return defaults
     return defaults
 
 
 def chat_with_layers(message, history):
-    """Chat using all AI assistant layers."""
     if not message or not message.strip():
         return "", history
     
     message = message.strip()
     history.append([message, None])
-    
-    config = get_config()
     reply = "Processing..."
-    tool_results = []
     
     try:
-        # 1. PERCEPTION LAYER - Process input
-        text_input = TextInput()
-        perception_result = text_input.process(message)
+        config = get_config()
         
-        # 2. BRAIN LAYER - Process with NLP and Memory
+        text_input = TextInput()
         brain = get_brain()
+        action_engine = get_action_engine()
+        
         brain_processed = brain.process(message)
         intent = brain_processed.get("parsed", {}).get("intents", ["general"])[0]
         
-        # 3. ACTION LAYER - Determine tool usage
-        action_engine = get_action_engine()
         tool_calls = action_engine.determine_tool_use(intent, message)
-        
-        # Execute tools if needed
+        tool_results = []
         if tool_calls:
             tool_results = action_engine.execute_tools(tool_calls)
         
-        # 4. Build prompt for LLM
         llm_messages = brain.generate_prompt()
-        llm_messages.append({
-            "role": "user",
-            "content": message
-        })
+        llm_messages.append({"role": "user", "content": message})
         
-        # 5. Call LLM (Ollama)
-        if config.get("provider") == "lmstudio":
-            url = config.get("lmstudio", {}).get("base_url", "http://localhost:1234/v1")
-            model = config.get("lmstudio", {}).get("model") or config.get("model")
-            try:
-                import requests
-                response = requests.post(
-                    f"{url}/chat/completions",
-                    json={"model": model, "messages": llm_messages},
-                    timeout=120
-                )
-                if response.status_code == 200:
-                    reply = response.json().get("choices", [{}])[0].get("message", {}).get("content", "No response")
-                else:
-                    reply = f"LM Studio error: {response.status_code}"
-            except Exception as e:
-                reply = f"LM Studio: {str(e)[:80]}"
-        else:
-            url = config.get("ollama", {}).get("base_url", "http://localhost:11434")
-            model = config.get("model", "qwen2.5-coder:1.5b")
-            try:
-                import requests
-                response = requests.post(
-                    f"{url}/api/chat",
-                    json={"model": model, "messages": llm_messages, "stream": False},
-                    timeout=120
-                )
-                if response.status_code == 200:
-                    result = response.json()
-                    reply = result.get("message", {}).get("content", "")
-                    if not reply:
-                        reply = result.get("response", "No response")
-                else:
-                    reply = f"Ollama: {response.status_code}"
-            except Exception as e:
-                reply = f"Error: {str(e)[:100]}"
+        url = config.get("ollama", {}).get("base_url", "http://localhost:11434")
+        model = config.get("model", "qwen2.5-coder:1.5b")
         
-        # 6. RESPONSE LAYER - Format output
+        try:
+            import requests
+            response = requests.post(
+                f"{url}/api/chat",
+                json={"model": model, "messages": llm_messages, "stream": False},
+                timeout=120
+            )
+            if response.status_code == 200:
+                result = response.json()
+                reply = result.get("message", {}).get("content", "") or result.get("response", "No response")
+            else:
+                reply = f"Ollama: {response.status_code}"
+        except Exception as e:
+            reply = f"Error: {str(e)[:100]}"
+        
         if tool_results:
             tool_info = "\n".join([f"Tool: {t['tool']} -> {t['result'][:100]}" for t in tool_results])
             reply = f"{reply}\n\n---\n{tool_info}"
         
-        # Add to brain memory
         brain.short_memory.add("assistant", reply)
         
-        # Track user profile
         profile = get_profile("default")
         profile.add_query(message)
         
-        # Learn from feedback
         learning = get_learning_engine()
-        learning.feedback.add(message, reply, 5)  # Default rating
+        learning.feedback.add(message, reply, 5)
         
     except Exception as e:
         reply = f"Error: {str(e)[:100]}"
@@ -222,8 +139,12 @@ def chat_with_layers(message, history):
     return "", history
 
 
-# Check MCP mode
-MCP_SERVER = os.environ.get("GRADIO_MCP_SERVER", "false").lower() == "true"
+voice_available = False
+try:
+    vi = VoiceInput()
+    voice_available = vi.available
+except:
+    pass
 
 
 def create_gui():
@@ -231,7 +152,6 @@ def create_gui():
     port = config.get("gui", {}).get("port", 7860)
     title = config.get("gui", {}).get("title", "Diskova AI")
     
-    # Check services
     ollama_url = config.get("ollama", {}).get("base_url", "http://localhost:11434")
     ollama_ok = False
     try:
@@ -239,67 +159,68 @@ def create_gui():
     except:
         pass
     
-    with gr.Blocks(title=title) as app:
+    with gr.Blocks(title=title, theme=gr.themes.Soft()) as app:
         gr.Markdown("""
-        <div style="text-align: center; padding: 20px; background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); border-radius: 10px; margin-bottom: 20px;">
-            <h1 style="color: white; margin: 0;">🤖 Diskova AI</h1>
+        <div style="text-align: center; padding: 25px; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border-radius: 15px; margin-bottom: 20px;">
+            <h1 style="color: white; margin: 0; font-size: 36px;">🤖 Diskova AI</h1>
             <p style="color: #e0e0e0; margin: 5px 0 0 0;">Your Local AI Coding Assistant</p>
         </div>
         """)
         
-        status_color = "🟢 Online" if ollama_ok else "🔴 Offline"
+        status_emoji = "🟢" if ollama_ok else "🔴"
         gr.Markdown(f"""
-        **Status:** {status_color} | **Model:** {config.get('model')}
-        
-**Architecture:**
-        - 🔤 Perception (Input) ✓
-        - 🧠 Brain (NLP + Memory) ✓
-        - 🔧 Action (Tools) ✓
-        - 📝 Response (Output) ✓
+        <div style="display: flex; justify-content: space-between; padding: 15px; background: #f8f9fa; border-radius: 10px; margin-bottom: 20px;">
+            <span><b>Status:</b> {status_emoji} {'Online' if ollama_ok else 'Offline'}</span>
+            <span><b>Model:</b> {config.get('model')}</span>
+            <span><b>Layers:</b> 4 Active ✓</span>
+        </div>
         """)
         
         with gr.Row():
-            with gr.Column(scale=3):
+            with gr.Column(scale=2):
                 gr.Markdown("### 💬 Chat")
-                chatbot = gr.Chatbot(height=500)
-                
-                msg_input = gr.Textbox(
-                    show_label=False, 
-                    placeholder="Type your message here... (Press Enter)",
-                    container=True
-                )
-                submit_btn = gr.Button("📤 Send", variant="primary")
+                chatbot = gr.Chatbot(height=450)
                 
                 with gr.Row():
-                    voice_btn = gr.Button("🎤 Voice", variant="secondary")
-                    clear_btn = gr.Button("🗑️ Clear", variant="stop")
+                    msg_input = gr.Textbox(
+                        show_label=False, 
+                        placeholder="Type your message here...",
+                        container=True,
+                        scale=4
+                    )
+                    submit_btn = gr.Button("Send", variant="primary", scale=1)
+                
+                with gr.Row():
+                    if voice_available:
+                        gr.Button("🎤 Voice")
+                    gr.Button("🗑️ Clear")
             
             with gr.Column(scale=1):
                 gr.Markdown("### ⚡ Quick Actions")
                 gr.Button("🌐 Web Search", variant="primary")
-                gr.Button("🌤️ Weather")
-                gr.Button("📅 Calendar")
-                gr.Button("📝 Reminders")
+                gr.Button("🌤️ Get Weather")
+                gr.Button("📅 Show Calendar")
+                gr.Button("�Show Reminders")  
                 gr.Button("🖥️ Run Code")
                 gr.Button("🌍 Translate")
-                gr.Button("📝 Notes")
-                gr.Button("📈 Stocks")
+                gr.Button("�Show Notes")
+                gr.Button("�Get Stock Prices")
                 
-                gr.Markdown("### ✨ Capabilities")
-                gr.Markdown(f"""
-- **🔍 Search**: Web + Wikipedia
-- **🌤️ Weather**: Live weather
-- **📈 Stocks**: Crypto/Forex
-- **💻 Code**: Run Python/JS
-- **📝 Productivity**: Notes, Reminders
-- **📅 Calendar**: Events + ICS
-- **📧 Email**: Send/Receive
-- **🌍 Languages**: 20+ Translation
-- **💾 Memory**: Session + Knowledge
-- **🎤 Voice**: Speech input
+                gr.Markdown("### ��� Capabilities")
+                gr.Markdown("""
+                <table style="width:100%;">
+                <tr><td>🔍 Search</td><td>Web + Wikipedia</td></tr>
+                <tr><td>🌤️ Weather</td><td>Live data</td></tr>
+                <tr><td>�Stocks</td><td>Crypto/Forex</td></tr>
+                <tr><td>💻 Code</td><td>Python/JS</td></tr>
+                <tr><td>�Notes</td><td>Create/Read</td></tr>
+                <tr><td>�Calendar</td><td>Events</td></tr>
+                <tr><td>�Email</td><td>Send/Receive</td></tr>
+                <tr><td>🌍 Languages</td><td>20+</td></tr>
+                </table>
                 """)
                 
-                gr.Markdown("### 💡 Examples")
+                gr.Markdown("### 💡 Try These")
                 gr.Examples(
                     examples=[
                         ["Hello!"],
@@ -308,23 +229,16 @@ def create_gui():
                         ["Add reminder: Check email at 2pm"],
                         ["Translate thank you to Japanese"],
                         ["Calculate 123 * 456"],
-                        ["Add note: Project ideas - Phase 1"],
-                        ["Run: print('Hello World')"],
+                        ["Run: print('Hello')"],
                     ],
                     inputs=msg_input,
                 )
         
-        # Event handlers
-        clear_btn.click(lambda: ("", []), outputs=[msg_input, chatbot])
         submit_btn.click(chat_with_layers, [msg_input, chatbot], [msg_input, chatbot])
         msg_input.submit(chat_with_layers, [msg_input, chatbot], [msg_input, chatbot])
         
-        # Footer
-        gr.Markdown("""
-        ---
-        *Diskova AI - Built with 4-Layer AI Architecture*
-        *Powered by Ollama (qwen2.5-coder:1.5b)*
-        """)
+        gr.Markdown("---")
+        gr.Markdown("*Powered by Ollama (qwen2.5-coder:1.5b) | 4-Layer AI Architecture*")
         
         return app, port
 
@@ -338,7 +252,7 @@ def main():
         port = port + 1
     
     app, _ = create_gui()
-    print(f"Diskova AI - Full Architecture")
+    print(f"Diskova AI")
     print(f"URL: http://localhost:{port}")
     print(f"Model: {config.get('model')}")
     app.launch(server_port=port, server_name="0.0.0.0", show_error=True)
