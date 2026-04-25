@@ -17,3 +17,7 @@ Thumbs.db
 node_modules/
 .idea/
 .vscode/
+
+# Config - sensitive (use example)
+config/llm_config.json
+!config/llm_config.example.json
