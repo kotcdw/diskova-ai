@@ -5,7 +5,7 @@ Diskova AI - Complete AI Assistant
 A full implementation of modern AI assistant architecture.
 
 Layers:
-- Perception: Text input processing
+- Perception: Text input, Voice (STT), Image (CV)
 - Brain: NLP, Reasoning, Memory
 - Action: Tool calling
 - Response: Output formatting
@@ -15,11 +15,15 @@ import os
 import sys
 import json
 import subprocess
+import threading
 from pathlib import Path
 from datetime import datetime
 import socket
 
 try:
+    import gradio as gr
+except ImportError:
+    subprocess.run([sys.executable, "-m", "pip", "install", "gradio", "-q"])
     import gradio as gr
 except ImportError:
     subprocess.run([sys.executable, "-m", "pip", "install", "gradio", "-q"])
@@ -39,6 +43,31 @@ from response import OutputHandler, get_output_handler
 from profiles import UserProfile, get_profile
 from continuous_learning import LearningEngine, get_learning_engine
 from knowledge_base import KnowledgeBase, get_knowledge_base
+
+# Voice input state
+voice_input = VoiceInput()
+voice_available = voice_input.available
+
+
+def process_voice(audio_path, history):
+    """Process voice input and return text."""
+    if not audio_path:
+        return "", history
+    
+    try:
+        from perception import VoiceInput
+        vi = VoiceInput()
+        if vi.available:
+            # Note:audio_path is the recorded audio file
+            # Use speech_recognition if available
+            text = vi.listen(timeout=5)
+            if text:
+                history.append([f"[Voice]: {text}", None])
+                return text, history
+    except Exception as e:
+        history.append(["[Voice]", f"Error: {str(e)[:50]}"])
+    
+    return "", history
 
 
 def check_port(port):
@@ -103,6 +132,7 @@ def chat_with_layers(message, history):
     
     config = get_config()
     reply = "Processing..."
+    tool_results = []
     
     try:
         # 1. PERCEPTION LAYER - Process input
@@ -112,14 +142,13 @@ def chat_with_layers(message, history):
         # 2. BRAIN LAYER - Process with NLP and Memory
         brain = get_brain()
         brain_processed = brain.process(message)
-        intent = brain_processed["parsed"]["intents"][0]
+        intent = brain_processed.get("parsed", {}).get("intents", ["general"])[0]
         
         # 3. ACTION LAYER - Determine tool usage
         action_engine = get_action_engine()
         tool_calls = action_engine.determine_tool_use(intent, message)
         
         # Execute tools if needed
-        tool_results = []
         if tool_calls:
             tool_results = action_engine.execute_tools(tool_calls)
         
@@ -233,6 +262,10 @@ def create_gui():
                         container=True
                     )
                     submit_btn = gr.Button("Send", variant="primary", scale=1)
+                    voice_btn = gr.Button("🎤 Voice", scale=1)
+                    audio_input = gr.Audio(sources=["microphone"], type="filepath", visible=False)
+                    audio_input.change(process_voice, [audio_input, chatbot], [msg_input, chatbot])
+                    voice_btn.click(lambda: gr.Audio(interactive=True), outputs=audio_input)
             
             with gr.Column(scale=1):
                 gr.Markdown("### Quick Actions")
@@ -241,11 +274,11 @@ def create_gui():
                     outputs=[msg_input, chatbot]
                 )
                 gr.Markdown("### Capabilities")
-                gr.Markdown("""
+                gr.Markdown(f"""
 - **NLU**: Intent detection
 - **Memory**: Context awareness  
 - **Tools**: Search, code execution
-- **Voice**: Speech input (coming)
+- **Voice**: Speech input {"✓" if voice_available else "(need mic)"}
                 """)
                 gr.Markdown("### Examples")
                 gr.Examples(

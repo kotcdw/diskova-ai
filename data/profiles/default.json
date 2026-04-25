@@ -1,0 +1,29 @@
+{
+  "user_id": "default",
+  "created_at": "2026-04-25T10:01:19.903388",
+  "preferences": {
+    "language": "en",
+    "tone": "friendly",
+    "code_style": "python",
+    "response_length": "medium",
+    "tts_enabled": false
+  },
+  "habits": {
+    "common_queries": [
+      "hi"
+    ],
+    "time_of_use": {},
+    "topics_of_interest": []
+  },
+  "feedback": [],
+  "history": [
+    {
+      "query": "hi",
+      "timestamp": "2026-04-25T10:01:19.903396"
+    },
+    {
+      "query": "hi",
+      "timestamp": "2026-04-25T10:04:39.312838"
+    }
+  ]
+}

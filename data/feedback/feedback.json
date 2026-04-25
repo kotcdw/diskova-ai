@@ -1,0 +1,16 @@
+[
+  {
+    "query": "hi",
+    "response": "Hello! How can I assist you today?",
+    "rating": 5,
+    "type": "rating",
+    "timestamp": "2026-04-25T10:01:19.905272"
+  },
+  {
+    "query": "hi",
+    "response": "Hello! How can I assist you today?",
+    "rating": 5,
+    "type": "rating",
+    "timestamp": "2026-04-25T10:04:39.326175"
+  }
+]
