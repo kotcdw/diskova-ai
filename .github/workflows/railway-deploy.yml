@@ -14,18 +14,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build and Push Docker Image
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
         run: |
-          echo "Building Docker image..."
-          docker build -t ghcr.io/${{ github.repository }}:latest .
-          docker push ghcr.io/${{ github.repository }}:latest
-      
-      - name: Deploy via Railway API
+          pip install -r requirements.txt
+
+      - name: Deploy to Railway
         run: |
-          # Get Railway token from GitHub secrets
-          RAILWAY_TOKEN=${{ secrets.RAILWAY_TOKEN }}
-          
-          # Create deployment
-          curl -X POST https://railway.app/apiv2/projects \
-            -H "Authorization: Bearer $RAILWAY_TOKEN" \
-            -H "Content-Type: application/json"
+          echo "Deployment would use Railway CLI"
+          # railway login
+          # railway init
+          # railway up
+          echo "Configure Railway manually with:"
+          echo "  1. railway login"
+          echo "  2. railway init"
+          echo "  3. railway up"
