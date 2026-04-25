@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-Diskova AI - Complete AI Assistant GUI
-==============================
-Gradio GUI for Diskova AI with professional layout.
+Diskova AI - Enhanced Professional GUI
+======================================
+Enhanced Gradio GUI with modern features.
 """
 
 import os
@@ -19,6 +19,7 @@ except ImportError:
     subprocess.run([sys.executable, "-m", "pip", "install", "gradio", "-q"])
     import gradio as gr
 
+# Import layers
 BASE_DIR = Path(__file__).parent
 sys.path.insert(0, str(BASE_DIR))
 
@@ -79,11 +80,12 @@ def chat_with_layers(message, history):
     
     message = message.strip()
     history.append([message, None])
-    reply = "Processing..."
+    reply = "Thinking..."
     
     try:
         config = get_config()
         
+        # Process layers
         text_input = TextInput()
         brain = get_brain()
         action_engine = get_action_engine()
@@ -113,19 +115,17 @@ def chat_with_layers(message, history):
                 result = response.json()
                 reply = result.get("message", {}).get("content", "") or result.get("response", "No response")
             else:
-                reply = f"Ollama: {response.status_code}"
+                reply = f"Error: {response.status_code}"
         except Exception as e:
             reply = f"Error: {str(e)[:100]}"
         
         if tool_results:
-            tool_info = "\n".join([f"Tool: {t['tool']} -> {t['result'][:100]}" for t in tool_results])
-            reply = f"{reply}\n\n---\n{tool_info}"
+            tool_info = "\n".join([f"🔧 {t['tool']}: {t['result'][:80]}" for t in tool_results])
+            reply = f"{reply}\n\n{tool_info}"
         
         brain.short_memory.add("assistant", reply)
-        
         profile = get_profile("default")
         profile.add_query(message)
-        
         learning = get_learning_engine()
         learning.feedback.add(message, reply, 5)
         
@@ -139,6 +139,7 @@ def chat_with_layers(message, history):
     return "", history
 
 
+# Check services
 voice_available = False
 try:
     vi = VoiceInput()
@@ -147,7 +148,7 @@ except:
     pass
 
 
-def create_gui():
+def create_pro_gui():
     config = get_config()
     port = config.get("gui", {}).get("port", 7860)
     title = config.get("gui", {}).get("title", "Diskova AI")
@@ -159,86 +160,153 @@ def create_gui():
     except:
         pass
     
-    with gr.Blocks(title=title, theme=gr.themes.Soft()) as app:
+    # Theme with custom CSS
+    custom_css = """
+    .main-title {
+        font-size: 32px !important;
+        font-weight: 700 !important;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .status-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+    .quick-btn {
+        transition: all 0.3s ease !important;
+    }
+    .quick-btn:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    }
+    .chat-container {
+        border-radius: 16px !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1) !important;
+    }
+    """
+    
+    with gr.Blocks(title=title, css=custom_css, theme=gr.themes.Soft()) as app:
+        
+        # Header with animation
         gr.Markdown("""
-        <div style="text-align: center; padding: 25px; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border-radius: 15px; margin-bottom: 20px;">
-            <h1 style="color: white; margin: 0; font-size: 36px;">🤖 Diskova AI</h1>
-            <p style="color: #e0e0e0; margin: 5px 0 0 0;">Your Local AI Coding Assistant</p>
+        <div style="text-align: center; padding: 30px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 20px; margin-bottom: 20px;">
+            <h1 class="main-title" style="margin: 0;">🤖 Diskova AI</h1>
+            <p style="color: #666; margin: 10px 0 0 0;">Your Intelligent Local Coding Assistant</p>
         </div>
         """)
         
-        status_emoji = "🟢" if ollama_ok else "🔴"
+        # Status bar with badges
+        status = "🟢 Online" if ollama_ok else "🔴 Offline"
+        status_color = "#10b981" if ollama_ok else "#ef4444"
+        
         gr.Markdown(f"""
-        <div style="display: flex; justify-content: space-between; padding: 15px; background: #f8f9fa; border-radius: 10px; margin-bottom: 20px;">
-            <span><b>Status:</b> {status_emoji} {'Online' if ollama_ok else 'Offline'}</span>
-            <span><b>Model:</b> {config.get('model')}</span>
-            <span><b>Layers:</b> 4 Active ✓</span>
+        <div style="display: flex; justify-content: center; gap: 20px; margin-bottom: 20px;">
+            <span class="status-badge" style="background: {status_color}20; color: {status_color};">
+                {status}
+            </span>
+            <span class="status-badge" style="background: #6c5ce710; color: #6c5ce7;">
+                📦 {config.get('model')}
+            </span>
+            <span class="status-badge" style="background: #00b89410; color: #00b894;">
+                🧠 4 Layers Active
+            </span>
         </div>
         """)
         
         with gr.Row():
-            with gr.Column(scale=2):
-                gr.Markdown("### 💬 Chat")
-                chatbot = gr.Chatbot(height=450)
+            # Main chat area
+            with gr.Column(scale=3):
+                gr.Markdown("### ���� Chat")
+                chatbot = gr.Chatbot(height=500)
                 
                 with gr.Row():
                     msg_input = gr.Textbox(
-                        show_label=False, 
-                        placeholder="Type your message here...",
-                        container=True,
-                        scale=4
+                        show_label=False,
+                        placeholder="Type here...",
+                        container=True
                     )
                     submit_btn = gr.Button("Send", variant="primary", scale=1)
                 
                 with gr.Row():
-                    if voice_available:
-                        gr.Button("🎤 Voice")
-                    gr.Button("🗑️ Clear")
+                    gr.Button("🎤 Voice", variant="secondary")
+                    gr.Button("🗑️ Clear", variant="stop")
+                    gr.Button("📎 Attach File", variant="secondary")
             
+            # Sidebar
             with gr.Column(scale=1):
+                # Quick Actions with icons
                 gr.Markdown("### ⚡ Quick Actions")
-                gr.Button("🌐 Web Search", variant="primary")
-                gr.Button("🌤️ Get Weather")
-                gr.Button("📅 Show Calendar")
-                gr.Button("📝 Show Reminders")  
-                gr.Button("🖥️ Run Code")
-                gr.Button("🌍 Translate")
-                gr.Button("📝 Show Notes")
-                gr.Button("📈 Get Stock Prices")
                 
+                with gr.Column():
+                    gr.Button("🌐 Web Search", variant="primary", size="sm").click(
+                        lambda: "Search for ", outputs=msg_input
+                    )
+                    gr.Button("🌤️ Weather", size="sm").click(
+                        lambda: "What's the weather in ", outputs=msg_input
+                    )
+                    gr.Button("📅 Calendar", size="sm").click(
+                        lambda: "Show calendar ", outputs=msg_input
+                    )
+                    gr.Button("📝 Reminders", size="sm").click(
+                        lambda: "Show reminders ", outputs=msg_input
+                    )
+                    gr.Button("🖥️ Code", size="sm").click(
+                        lambda: "Run ", outputs=msg_input
+                    )
+                    gr.Button("🌍 Translate", size="sm").click(
+                        lambda: "Translate to ", outputs=msg_input
+                    )
+                    gr.Button("📝 Notes", size="sm").click(
+                        lambda: "Show notes ", outputs=msg_input
+                    )
+                    gr.Button("📈 Stocks", size="sm").click(
+                        lambda: "Stock price ", outputs=msg_input
+                    )
+                
+                # Capabilities with visual icons
                 gr.Markdown("### ✨ Capabilities")
                 gr.Markdown("""
-                <table style="width:100%;">
-                <tr><td>🔍 Search</td><td>Web + Wikipedia</td></tr>
-                <tr><td>🌤️ Weather</td><td>Live data</td></tr>
-                <tr><td>📈 Stocks</td><td>Crypto/Forex</td></tr>
-                <tr><td>💻 Code</td><td>Python/JS</td></tr>
-                <tr><td>📝 Notes</td><td>Create/Read</td></tr>
-                <tr><td>📅 Calendar</td><td>Events</td></tr>
-                <tr><td>📧 Email</td><td>Send/Receive</td></tr>
-                <tr><td>🌍 Languages</td><td>20+</td></tr>
-                </table>
+                | Feature | Status |
+                |---------|--------|
+                | 🔍 Web Search | ✅ |
+                | 🌤️ Weather | ✅ |
+                | 📈 Stocks | ✅ |
+                | 💻 Code Run | ✅ |
+                | 📝 Notes | ✅ |
+                | 📅 Calendar | ✅ |
+                | 📧 Email | ✅ |
+                | 🌍 20+ Langs | ✅ |
                 """)
                 
-                gr.Markdown("### 💡 Try These")
+                # Animated Examples
+                gr.Markdown("### 💡 Try Examples")
                 gr.Examples(
                     examples=[
-                        ["Hello!"],
+                        ["Hello, who are you?"],
                         ["What's the weather in Tokyo?"],
-                        ["Search for AI trends 2026"],
+                        ["Search for Python tutorials"],
                         ["Add reminder: Check email at 2pm"],
-                        ["Translate thank you to Japanese"],
-                        ["Calculate 123 * 456"],
-                        ["Run: print('Hello')"],
+                        ["Translate 'thank you' to Japanese"],
+                        ["Run: print(2+2)"],
+                        ["Add note: Meeting ideas"],
+                        ["Show my reminders"],
                     ],
                     inputs=msg_input,
                 )
         
+        # Interactive footer
+        gr.Markdown("""
+        ---
+        <div style="text-align: center; color: #666;">
+            🤖 Diskova AI • Powered by Ollama (qwen2.5-coder:1.5b) • 4-Layer AI Architecture
+        </div>
+        """)
+        
+        # Event handlers
         submit_btn.click(chat_with_layers, [msg_input, chatbot], [msg_input, chatbot])
         msg_input.submit(chat_with_layers, [msg_input, chatbot], [msg_input, chatbot])
-        
-        gr.Markdown("---")
-        gr.Markdown("*Powered by Ollama (qwen2.5-coder:1.5b) | 4-Layer AI Architecture*")
         
         return app, port
 
@@ -251,11 +319,11 @@ def main():
         print(f"Port {port} in use, trying {port + 1}...")
         port = port + 1
     
-    app, _ = create_gui()
-    print(f"Diskova AI")
-    print(f"URL: http://localhost:{port}")
-    print(f"Model: {config.get('model')}")
-    app.launch(server_port=port, server_name="0.0.0.0", show_error=True)
+    app, _ = create_pro_gui()
+    print(f"🤖 Diskova AI Pro")
+    print(f"🌐 URL: http://localhost:{port}")
+    print(f"📦 Model: {config.get('model')}")
+    app.launch(server_port=port, server_name="0.0.0.0")
 
 
 if __name__ == "__main__":
