@@ -7,7 +7,7 @@ Tool calling - interacts with external services.
 import subprocess
 import json
 import requests
-from typing import Dict, List, Optional, Any, Callable
+from typing import Dict, List, Optional, Callable
 from pathlib import Path
 
 
@@ -21,18 +21,30 @@ class ToolRegistry:
     def _register_default_tools(self):
         """Register built-in tools."""
         
-        def search_web(query: str) -> str:
-            """Search the web."""
-            try:
-                response = requests.get(
-                    "https://duckduckgo.com/",
-                    params={"q": query, "format": "json"},
-                    timeout=10
-                )
-                results = response.json().get("Results", [])
-                return "\n".join([r.get("text", "") for r in results[:5]]) or "No results"
-            except Exception as e:
-                return f"Search error: {e}"
+        # Import internet tools for better search
+        try:
+            from internet_tools import search_web as internet_search, get_weather, get_stock_price
+            self.tools["search"] = internet_search
+            self.tools["weather"] = get_weather
+            self.tools["stock"] = get_stock_price
+        except ImportError:
+            pass
+        
+        # Fallback search if import fails
+        if "search" not in self.tools:
+            def search_web(query: str) -> str:
+                """Search the web."""
+                try:
+                    response = requests.get(
+                        "https://duckduckgo.com/",
+                        params={"q": query, "format": "json"},
+                        timeout=10
+                    )
+                    results = response.json().get("Results", [])
+                    return "\n".join([r.get("text", "") for r in results[:5]]) or "No results"
+                except Exception as e:
+                    return f"Search error: {e}"
+            self.tools["search"] = search_web
         
         def run_code(code: str, language: str = "python") -> str:
             """Execute code."""
